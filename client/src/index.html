@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fa" dir="rtl" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <title>زوم‌آی‌تی | اخبار فناوری، علم و بازی</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="رسانه‌ای مستقل برای پوشش اخبار فناوری، علمی، خودرو، بازی و فضای مجازی به زبان فارسی.">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script>
+    // Apply the persisted theme before the app boots to avoid a flash of the wrong theme.
+    (function () {
+      try {
+        var stored = localStorage.getItem('zoomit-theme');
+        var theme = stored === 'dark' || stored === 'light'
+          ? stored
+          : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>

@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out-tsc/
+tmp/
+bazel-out/
+
+# Angular cache
+.angular/cache
+
+# Environment files (secrets)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log
+
+# Uploads (user content)
+server/uploads/*
+!server/uploads/.gitkeep
+
+# MongoDB data files
+.mongodb-data/
+server/.mongodb-data/
+
+# Test / coverage
+coverage/
+
+# IDEs and editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Temporary build/debug output
+client/build-output.txt
+client/tsc-errors.txt
