@@ -1,4 +1,4 @@
-# Prictise
+# News
 
 A full-stack practice project with an Angular client and a Node/Express server.
 
