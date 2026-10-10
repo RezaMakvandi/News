@@ -28,7 +28,9 @@ interface SettingRow {
     <div class="admin-page-head">
       <div>
         <h1>تنظیمات سایت</h1>
-        <p class="text-sm text-muted">پیکربندی عمومی، سئو، شبکه‌های اجتماعی و ظاهر سایت.</p>
+        <p class="text-sm text-muted">
+          پیکربندی عمومی، سئو، شبکه‌های اجتماعی، فروشگاه و درگاه پرداخت.
+        </p>
       </div>
       <button type="button" class="btn btn-primary" (click)="save()" [disabled]="saving()">
         @if (saving()) {
@@ -91,9 +93,19 @@ interface SettingRow {
                     <input
                       class="input"
                       type="number"
-                      min="1"
-                      max="60"
+                      [min]="item.key === 'postsPerPage' ? 1 : 0"
+                      [max]="item.key === 'postsPerPage' ? 60 : 1000000000"
                       [ngModel]="asNumber(item.value)"
+                      (ngModelChange)="setValue(item.key, $event)"
+                    />
+                  } @else if (isMerchantId(item.key)) {
+                    <label class="label">{{ item.label }}</label>
+                    <input
+                      class="input mono"
+                      type="text"
+                      dir="ltr"
+                      placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                      [ngModel]="asString(item.value)"
                       (ngModelChange)="setValue(item.key, $event)"
                     />
                   } @else {
@@ -104,6 +116,9 @@ interface SettingRow {
                       [ngModel]="asString(item.value)"
                       (ngModelChange)="setValue(item.key, $event)"
                     />
+                  }
+                  @if (hintFor(item.key)) {
+                    <p class="field-hint">{{ hintFor(item.key) }}</p>
                   }
                 </div>
               }
@@ -132,6 +147,19 @@ interface SettingRow {
 
     .stack-lg > * + * {
       margin-top: var(--space-4);
+    }
+
+    .field-hint {
+      margin: 0.375rem 0 0;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.85rem;
+      letter-spacing: 0.02em;
     }
 
     @media (max-width: 900px) {
@@ -179,7 +207,7 @@ export class SettingsPage {
   }
 
   protected isNumber(key: string): boolean {
-    return key === 'postsPerPage';
+    return key === 'postsPerPage' || key === 'shippingCost' || key === 'freeShippingFrom';
   }
 
   protected isLongText(key: string): boolean {
@@ -187,7 +215,25 @@ export class SettingsPage {
   }
 
   protected isUrlLike(key: string): boolean {
-    return key.startsWith('social') || key === 'accentColor';
+    return key.startsWith('social') || key === 'accentColor' || key === 'payCallbackUrl';
+  }
+
+  protected isMerchantId(key: string): boolean {
+    return key === 'zarinpalMerchantId';
+  }
+
+  /** Hint shown under a setting, if any. */
+  protected hintFor(key: string): string {
+    switch (key) {
+      case 'zarinpalMerchantId':
+        return 'شناسه ۳۶ کاراکتری دریافتی از پنل زرین‌پال (UUID). خالی بودن در حالت تست از مرچنت پیش‌فرض سندباکس استفاده می‌کند.';
+      case 'zarinpalSandbox':
+        return 'در حالت تست، پرداخت‌ها در محیط آزمایشی زرین‌پال انجام می‌شوند و پول واقعی جابه‌جا نمی‌شود.';
+      case 'payCallbackUrl':
+        return 'آدرس بازگشت پس از پرداخت. خالی بگذارید تا به‌صورت خودکار ساخته شود.';
+      default:
+        return '';
+    }
   }
 
   protected asBool(value: unknown): boolean {
@@ -201,7 +247,8 @@ export class SettingsPage {
 
   protected asNumber(value: unknown): number {
     const num = Number(value);
-    return Number.isFinite(num) ? num : 12;
+    if (!Number.isFinite(num)) return 0;
+    return num;
   }
 
   protected setValue(key: string, value: unknown): void {

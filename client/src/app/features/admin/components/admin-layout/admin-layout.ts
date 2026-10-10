@@ -44,7 +44,7 @@ const NAV: NavGroup[] = [
       { path: '/admin/shop/orders', label: 'سفارشها', icon: 'bag' },
       {
         path: '/admin/shop/categories',
-        label: 'دستهبندی محصولات',
+        label: 'دسته بندی محصولات',
         icon: 'folder',
         roles: ADMIN_ROLES,
       },

@@ -1,4 +1,12 @@
-export type SettingGroup = 'general' | 'social' | 'seo' | 'footer' | 'content' | 'appearance';
+export type SettingGroup =
+  | 'general'
+  | 'social'
+  | 'seo'
+  | 'footer'
+  | 'content'
+  | 'appearance'
+  | 'shop'
+  | 'payment';
 
 export interface SettingItem {
   key: string;
@@ -47,6 +55,8 @@ export const SETTING_GROUP_LABELS: Record<SettingGroup, string> = {
   footer: 'پاورقی',
   content: 'محتوا و نظرات',
   appearance: 'ظاهر و قالب',
+  shop: 'فروشگاه',
+  payment: 'درگاه پرداخت زرین‌پال',
 };
 
 export const SETTING_GROUP_ORDER: SettingGroup[] = [
@@ -56,6 +66,8 @@ export const SETTING_GROUP_ORDER: SettingGroup[] = [
   'social',
   'seo',
   'footer',
+  'shop',
+  'payment',
 ];
 
 /** Keys rendered as toggles rather than text inputs. */
@@ -63,6 +75,9 @@ export const SETTING_BOOLEAN_KEYS = new Set([
   'commentsEnabled',
   'commentsModeration',
   'breakingEnabled',
+  'shopEnabled',
+  'codEnabled',
+  'zarinpalSandbox',
 ]);
 
 /** Keys that hold a colour value. */

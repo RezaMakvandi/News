@@ -137,7 +137,7 @@ export const routes: Routes = [
           import('./features/admin/pages/shop/product-categories').then(
             (m) => m.AdminProductCategoriesPage,
           ),
-        title: 'دستهبندی محصولات | پنل مدیریت',
+        title: 'دسته بندی محصولات | پنل مدیریت',
       },
       {
         path: 'shop/brands',
@@ -272,7 +272,7 @@ export const routes: Routes = [
         path: 'shop/wishlist',
         loadComponent: () =>
           import('./features/public/pages/shop/wishlist').then((m) => m.WishlistPage),
-        title: 'علاقهمندیها | فروشگاه',
+        title: 'علاقه مندیها | فروشگاه',
       },
       {
         path: 'shop/compare',

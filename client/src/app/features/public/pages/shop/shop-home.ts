@@ -49,7 +49,7 @@ import type { FeaturedProducts, ProductCategory } from '../../../../core/models/
         @if (categories().length) {
           <section style="margin-bottom: var(--space-6)">
             <div class="shop-section-head">
-              <h2>دستهبندیها</h2>
+              <h2>دسته بندیها</h2>
             </div>
             <div class="category-tiles">
               @for (category of categories(); track category._id) {

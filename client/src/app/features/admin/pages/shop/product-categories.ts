@@ -26,7 +26,7 @@ import type { ProductCategory } from '../../../../core/models/product.model';
   template: `
     <div class="admin-page-head">
       <div>
-        <h1>دستهبندی محصولات</h1>
+        <h1>دسته بندی محصولات</h1>
         <p class="text-sm text-muted">دستهبندی کاتالوگ فروشگاه.</p>
       </div>
       <button type="button" class="btn btn-primary" (click)="openEditor()">

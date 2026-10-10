@@ -72,7 +72,7 @@ import { asBrand, asProductCategory, finalPrice } from '../../../../core/utils/s
         [ngModel]="categoryFilter()"
         (ngModelChange)="setCategory($event)"
       >
-        <option value="all">همه دستهها</option>
+        <option value="all">همه دسته ها</option>
         @for (category of categories(); track category._id) {
           <option [value]="category._id">{{ category.name }}</option>
         }
