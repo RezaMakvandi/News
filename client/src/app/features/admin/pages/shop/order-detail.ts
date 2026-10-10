@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -246,7 +246,26 @@ export class AdminOrderDetailPage {
 
   constructor() {
     this.seo.set({ title: 'جزئیات سفارش | پنل مدیریت' });
-    this.load();
+
+    effect(() => {
+      const id = this.id();
+      if (!id) return;
+
+      this.loading.set(true);
+      this.orderService.adminOrder(id).subscribe({
+        next: (order) => {
+          this.order.set(order);
+          this.statusForm = order.status;
+          this.trackingCode = order.trackingCode ?? '';
+          this.adminNote = order.adminNote ?? '';
+          this.loading.set(false);
+        },
+        error: () => {
+          this.order.set(null);
+          this.loading.set(false);
+        },
+      });
+    });
   }
 
   protected customer(): { name: string; email: string } | null {
@@ -298,21 +317,6 @@ export class AdminOrderDetailPage {
         this.toast.success('وضعیت پرداخت بهروزرسانی شد');
       },
       error: (error: Error) => this.toast.error(error.message),
-    });
-  }
-
-  private load(): void {
-    const id = this.id();
-    if (!id) return;
-    this.orderService.adminOrder(id).subscribe({
-      next: (order) => {
-        this.order.set(order);
-        this.statusForm = order.status;
-        this.trackingCode = order.trackingCode ?? '';
-        this.adminNote = order.adminNote ?? '';
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
     });
   }
 }

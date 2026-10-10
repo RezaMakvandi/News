@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { NgClass } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../../../shared/components/icon/icon';
@@ -221,7 +229,24 @@ export class OrderDetailPage {
 
   constructor() {
     this.seo.set({ title: 'جزئیات سفارش' });
-    this.load();
+
+    effect(() => {
+      const id = this.id();
+      if (!id) return;
+
+      this.loading.set(true);
+      this.order.set(null);
+      this.orderService.myOrder(id).subscribe({
+        next: (order) => {
+          this.order.set(order);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.order.set(null);
+          this.loading.set(false);
+        },
+      });
+    });
   }
 
   protected statusLabel(status: OrderStatus): string {
@@ -279,21 +304,6 @@ export class OrderDetailPage {
       error: (error: Error) => {
         this.cancelling.set(false);
         this.toast.error(error.message);
-      },
-    });
-  }
-
-  private load(): void {
-    const id = this.id();
-    if (!id) return;
-    this.orderService.myOrder(id).subscribe({
-      next: (order) => {
-        this.order.set(order);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.order.set(null);
-        this.loading.set(false);
       },
     });
   }
