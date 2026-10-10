@@ -60,6 +60,90 @@ const endpoints =
 
 const REQUEST_TIMEOUT = 15_000;
 
+/**
+ * Extracts a human-readable message from a Zarinpal v4 response.
+ * v4 puts validation/gateway errors in `errors` (with `data.code` sometimes
+ * absent), while successful payloads use `data.message`.
+ */
+const extractErrorMessage =
+  (
+    result: Record<
+      string,
+      unknown
+    >,
+    fallback: string,
+  ): string => {
+    const data =
+      (result.data as Record<
+        string,
+        unknown
+      >) ??
+      {};
+    const errors =
+      (result.errors as Record<
+        string,
+        unknown
+      >) ??
+      {};
+
+    const candidate =
+      (errors.message as string) ||
+      (errors.code !==
+      undefined
+        ? `کد خطای درگاه: ${errors.code}`
+        : "") ||
+      (data.message as string) ||
+      "";
+
+    return (
+      candidate ||
+      fallback
+    );
+  };
+
+/** True when the Zarinpal payload carries a gateway error. */
+const hasGatewayError =
+  (
+    result: Record<
+      string,
+      unknown
+    >,
+  ): boolean => {
+    const errors =
+      result.errors as
+        | Record<
+            string,
+            unknown
+          >
+        | Record<
+            string,
+            unknown
+          >[]
+        | undefined;
+    if (
+      !errors
+    )
+      return false;
+    if (
+      Array.isArray(
+        errors,
+      )
+    )
+      return (
+        errors.length >
+        0
+      );
+    return (
+      errors.message !==
+        undefined &&
+      String(
+        errors.message,
+      )
+        .length >
+        0
+    );
+  };
+
 const post =
   async (
     url: string,
@@ -143,6 +227,30 @@ export const requestPayment =
       endpoints(
         config.sandbox,
       );
+    // Zarinpal v4 rejects empty metadata strings (HTTP 422, code -9:
+    // "The metadata.mobile must be a string."), so only send fields
+    // that actually carry a value.
+    const metadata:
+      | {
+          email?: string;
+          mobile?: string;
+        }
+      | undefined =
+      email ||
+      mobile
+        ? {
+            ...(email
+              ? {
+                  email,
+                }
+              : {}),
+            ...(mobile
+              ? {
+                  mobile,
+                }
+              : {}),
+          }
+        : undefined;
     const payload =
       {
         merchant_id:
@@ -155,15 +263,11 @@ export const requestPayment =
           "پرداخت سفارش",
         callback_url:
           config.callbackUrl,
-        metadata:
-          {
-            email:
-              email ??
-              "",
-            mobile:
-              mobile ??
-              "",
-          },
+        ...(metadata
+          ? {
+              metadata,
+            }
+          : {}),
       };
 
     try {
@@ -202,10 +306,25 @@ export const requestPayment =
       }
       return {
         ok: false,
-        code,
+        code: hasGatewayError(
+          result,
+        )
+          ? Number(
+              (
+                result.errors as Record<
+                  string,
+                  unknown
+                >
+              )
+                .code ??
+                -1,
+            )
+          : code,
         message:
-          (data.message as string) ||
-          "ایجاد تراکنش ناموفق بود",
+          extractErrorMessage(
+            result,
+            "ایجاد تراکنش ناموفق بود",
+          ),
       };
     } catch (error) {
       logger.error(
@@ -282,8 +401,10 @@ export const verifyPayment =
         ok: false,
         code,
         message:
-          (data.message as string) ||
-          "تأیید تراکنش ناموفق بود",
+          extractErrorMessage(
+            result,
+            "تأیید تراکنش ناموفق بود",
+          ),
       };
     } catch (error) {
       logger.error(

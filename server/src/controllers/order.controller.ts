@@ -397,6 +397,9 @@ export const startPayment =
           req
             .user
             .email,
+          order
+            .address
+            ?.phone,
         );
 
       if (
