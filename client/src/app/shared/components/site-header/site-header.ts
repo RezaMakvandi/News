@@ -4,12 +4,14 @@ import { IconComponent } from '../icon/icon';
 import { ThemeService } from '../../../core/services/theme.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { CartService } from '../../../core/services/cart.service';
+import { FaNumberPipe } from '../../pipes/format.pipe';
 import type { Category } from '../../../core/models/taxonomy.model';
 import { faNumber } from '../../../core/utils/format';
 
 @Component({
   selector: 'app-site-header',
-  imports: [RouterLink, RouterLinkActive, IconComponent],
+  imports: [RouterLink, RouterLinkActive, IconComponent, FaNumberPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="site-header" [class.is-scrolled]="scrolled()">
@@ -23,20 +25,34 @@ import { faNumber } from '../../../core/utils/format';
         </a>
 
         <nav class="main-nav" aria-label="فهرست اصلی">
-          <a routerLink="/" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="is-active">
+          <a
+            routerLink="/"
+            [routerLinkActiveOptions]="{ exact: true }"
+            routerLinkActive="is-active"
+          >
             صفحه اصلی
           </a>
+          <a routerLink="/shop" routerLinkActive="is-active">فروشگاه</a>
           @for (category of categories(); track category._id) {
-            <a
-              [routerLink]="['/category', category.slug]"
-              routerLinkActive="is-active"
-            >
+            <a [routerLink]="['/category', category.slug]" routerLinkActive="is-active">
               {{ category.name }}
             </a>
           }
         </nav>
 
         <div class="header-actions">
+          <a
+            class="btn btn-icon shop-nav-link"
+            routerLink="/shop/cart"
+            aria-label="سبد خرید"
+            title="سبد خرید"
+          >
+            <app-icon name="cart" />
+            @if (cartCount() > 0) {
+              <span class="cart-badge">{{ cartCount() | faNumber }}</span>
+            }
+          </a>
+
           <button
             type="button"
             class="btn btn-icon"
@@ -102,7 +118,12 @@ import { faNumber } from '../../../core/utils/format';
 
       @if (mobileOpen()) {
         <nav class="mobile-nav" aria-label="فهرست موبایل">
-          <a routerLink="/" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="is-active" (click)="closeMobile()">
+          <a
+            routerLink="/"
+            [routerLinkActiveOptions]="{ exact: true }"
+            routerLinkActive="is-active"
+            (click)="closeMobile()"
+          >
             صفحه اصلی
           </a>
           @for (category of categories(); track category._id) {
@@ -114,7 +135,16 @@ import { faNumber } from '../../../core/utils/format';
               {{ category.name }}
             </a>
           }
-          <a routerLink="/contact" routerLinkActive="is-active" (click)="closeMobile()">تماس با ما</a>
+          <a routerLink="/shop" routerLinkActive="is-active" (click)="closeMobile()">فروشگاه</a>
+          <a routerLink="/shop/wishlist" routerLinkActive="is-active" (click)="closeMobile()"
+            >علاقهمندیها</a
+          >
+          <a routerLink="/shop/orders" routerLinkActive="is-active" (click)="closeMobile()"
+            >سفارشهای من</a
+          >
+          <a routerLink="/contact" routerLinkActive="is-active" (click)="closeMobile()"
+            >تماس با ما</a
+          >
           @if (auth.isLoggedIn()) {
             <a routerLink="/admin" (click)="closeMobile()">پنل کاربری</a>
           } @else {
@@ -150,17 +180,26 @@ export class SiteHeaderComponent {
   protected readonly auth = inject(AuthService);
   private readonly settings = inject(SettingsService);
   private readonly router = inject(Router);
+  protected readonly cart = inject(CartService);
 
   protected readonly scrolled = signal(false);
   protected readonly mobileOpen = signal(false);
   protected readonly searchOpen = signal(false);
   protected readonly query = signal('');
 
-  protected readonly siteName = computed(() => (this.settings.settings()['siteName'] as string) || 'زوم‌آیتی');
+  protected readonly siteName = computed(
+    () => (this.settings.settings()['siteName'] as string) || 'زوم‌آیتی',
+  );
   protected readonly siteTagline = computed(
     () => (this.settings.settings()['siteTagline'] as string) || 'رسانه فناوری',
   );
   protected readonly siteInitial = computed(() => this.siteName().charAt(0));
+
+  /** Live cart badge — server count when signed in, local count otherwise. */
+  protected readonly cartCount = computed(() => {
+    if (this.auth.isLoggedIn()) return this.cart.itemsCount();
+    return this.cart.localCount();
+  });
 
   protected readonly faNumber = faNumber;
 

@@ -37,6 +37,24 @@ const NAV: NavGroup[] = [
     ],
   },
   {
+    label: 'فروشگاه',
+    items: [
+      { path: '/admin/shop', label: 'داشبورد فروشگاه', icon: 'store', exact: true },
+      { path: '/admin/shop/products', label: 'محصولات', icon: 'package' },
+      { path: '/admin/shop/orders', label: 'سفارشها', icon: 'bag' },
+      {
+        path: '/admin/shop/categories',
+        label: 'دستهبندی محصولات',
+        icon: 'folder',
+        roles: ADMIN_ROLES,
+      },
+      { path: '/admin/shop/brands', label: 'برندها', icon: 'store', roles: ADMIN_ROLES },
+      { path: '/admin/shop/inventory', label: 'انبار و موجودی', icon: 'list' },
+      { path: '/admin/shop/coupons', label: 'کدهای تخفیف', icon: 'ticket', roles: ADMIN_ROLES },
+      { path: '/admin/shop/reviews', label: 'نظرات محصولات', icon: 'star' },
+    ],
+  },
+  {
     label: 'ارتباط با مخاطب',
     items: [
       { path: '/admin/comments', label: 'مدیریت نظرات', icon: 'comment' },
@@ -102,7 +120,12 @@ const NAV: NavGroup[] = [
               <span class="author-sub">{{ roleLabel() }}</span>
             </span>
           </div>
-          <button type="button" class="btn btn-ghost btn-icon" (click)="logout()" aria-label="خروج از حساب">
+          <button
+            type="button"
+            class="btn btn-ghost btn-icon"
+            (click)="logout()"
+            aria-label="خروج از حساب"
+          >
             <app-icon name="logout" [size]="18" />
           </button>
         </div>
@@ -110,7 +133,12 @@ const NAV: NavGroup[] = [
 
       <div class="admin-main">
         <header class="admin-topbar">
-          <button type="button" class="btn btn-ghost btn-icon menu-toggle" (click)="mobileOpen.set(true)" aria-label="باز کردن منو">
+          <button
+            type="button"
+            class="btn btn-ghost btn-icon menu-toggle"
+            (click)="mobileOpen.set(true)"
+            aria-label="باز کردن منو"
+          >
             <app-icon name="menu" [size]="20" />
           </button>
 
@@ -128,7 +156,12 @@ const NAV: NavGroup[] = [
           <a class="btn btn-ghost btn-icon" routerLink="/" aria-label="مشاهده سایت">
             <app-icon name="globe" [size]="18" />
           </a>
-          <button type="button" class="btn btn-ghost btn-icon" (click)="theme.toggle()" [attr.aria-label]="theme.mode() === 'dark' ? 'پوسته روشن' : 'پوسته تیره'">
+          <button
+            type="button"
+            class="btn btn-ghost btn-icon"
+            (click)="theme.toggle()"
+            [attr.aria-label]="theme.mode() === 'dark' ? 'پوسته روشن' : 'پوسته تیره'"
+          >
             <app-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" [size]="18" />
           </button>
         </header>
@@ -186,7 +219,9 @@ export class AdminLayoutComponent {
   protected readonly mobileOpen = signal(false);
 
   protected readonly roleLabel = computed(() => USER_ROLE_LABELS[this.auth.role() ?? 'subscriber']);
-  protected readonly userInitial = computed(() => (this.auth.displayName() || '؟').trim().charAt(0));
+  protected readonly userInitial = computed(() =>
+    (this.auth.displayName() || '؟').trim().charAt(0),
+  );
 
   /** Hide nav groups whose every item is gated above the current role. */
   protected readonly visibleNav = computed(() => {
