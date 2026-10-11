@@ -28,7 +28,7 @@ import type { CartTotals } from '../../../../core/models/cart.model';
             class="btn btn-primary"
             routerLink="/admin/login"
             [queryParams]="{ redirect: '/shop/cart' }"
-            >ورود / ثبتنام</a
+            >ورود / ثبت نام</a
           >
         </div>
       } @else if (loading()) {

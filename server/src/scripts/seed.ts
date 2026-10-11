@@ -520,12 +520,15 @@ const run =
     /* -------------------------------- pages ------------------------------ */
     let createdPages = 0;
     for (const seed of pageSeeds) {
+      // The Page pre-save hook overrides the slug with slugify(title), so
+      // match by the effective slug to stay idempotent across runs.
       const exists =
-        await Page.findOne(
-          {
-            slug: seed.slug,
-          },
-        );
+        await Page.findOne({
+          slug: slugify(
+            seed.title,
+            "page",
+          ),
+        });
       if (
         exists
       )
