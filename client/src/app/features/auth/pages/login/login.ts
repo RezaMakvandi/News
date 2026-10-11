@@ -103,7 +103,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
             @if (submitting()) {
               <span class="spinner spinner-sm"></span>
             }
-            ورود به پنل
+            ورود
           </button>
         </form>
 
