@@ -35,7 +35,12 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
               <span class="brand-tag">پنل مدیریت</span>
             </span>
           </a>
-          <button type="button" class="btn btn-ghost btn-icon" (click)="theme.toggle()" aria-label="تغییر پوسته">
+          <button
+            type="button"
+            class="btn btn-ghost btn-icon theme_btn"
+            (click)="theme.toggle()"
+            aria-label="تغییر پوسته"
+          >
             <app-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" [size]="18" />
           </button>
         </div>
@@ -48,7 +53,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
             <div class="badge badge-danger auth-error">{{ error() }}</div>
           }
 
-          <div class="field">
+          <div class="field login_field">
             <label class="label" for="login-email">ایمیل</label>
             <input
               id="login-email"
@@ -66,7 +71,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
             }
           </div>
 
-          <div class="field">
+          <div class="field login_field">
             <label class="label" for="login-password">گذرواژه</label>
             <div class="password-wrap">
               <input
@@ -86,7 +91,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
                 (click)="showPassword.set(!showPassword())"
                 [attr.aria-label]="showPassword() ? 'پنهان کردن گذرواژه' : 'نمایش گذرواژه'"
               >
-                <app-icon [name]="showPassword() ? 'eye' : 'eye'" [size]="16" />
+                <app-icon [name]="showPassword() ? 'eyeOff' : 'eye'" [size]="16" />
               </button>
             </div>
             @if (fieldErrors()['password']) {
@@ -116,6 +121,18 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     </div>
   `,
   styles: `
+    .auth-head {
+      position: relative;
+    }
+    .theme_btn {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+    .login_field {
+      margin-top: 0 !important ;
+      margin-bottom: 0 !important;
+    }
     .password-wrap {
       position: relative;
     }
@@ -126,6 +143,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
 
     .password-toggle {
       position: absolute;
+      right: 0;
       inset-inline-end: var(--space-2);
       top: 50%;
       translate: 0 -50%;
