@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { IconComponent } from '../icon/icon';
 import { ThemeService } from '../../../core/services/theme.service';
@@ -8,6 +17,7 @@ import { CartService } from '../../../core/services/cart.service';
 import { FaNumberPipe } from '../../pipes/format.pipe';
 import type { Category } from '../../../core/models/taxonomy.model';
 import { faNumber } from '../../../core/utils/format';
+import { USER_ROLE_LABELS } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-site-header',
@@ -73,10 +83,90 @@ import { faNumber } from '../../../core/utils/format';
             <app-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" />
           </button>
 
-          @if (auth.isStaff()) {
-            <a class="btn btn-soft btn-sm admin-link" routerLink="/admin">
-              <app-icon name="dashboard" [size]="16" />
-              پنل مدیریت
+          @if (auth.isLoggedIn()) {
+            <div #profileMenu class="profile-menu" [class.is-open]="profileOpen()">
+              <button
+                type="button"
+                class="profile-trigger"
+                (click)="toggleProfile(); $event.stopPropagation()"
+                [attr.aria-expanded]="profileOpen()"
+                aria-haspopup="menu"
+                aria-label="حساب کاربری"
+                [title]="auth.displayName() || 'حساب کاربری'"
+              >
+                @if (auth.currentUser()?.avatar) {
+                  <img
+                    class="profile-avatar"
+                    [src]="auth.currentUser()!.avatar"
+                    [alt]="auth.displayName()"
+                  />
+                } @else {
+                  <span class="profile-avatar profile-avatar-fallback">{{ userInitial() }}</span>
+                }
+              </button>
+
+              @if (profileOpen()) {
+                <div class="profile-dropdown" role="menu" aria-label="حساب کاربری">
+                  <div class="profile-head">
+                    <span class="profile-head-name">{{ auth.displayName() || 'کاربر' }}</span>
+                    <span class="profile-head-role">{{ roleLabel() }}</span>
+                  </div>
+
+                  <a
+                    class="dropdown-item"
+                    role="menuitem"
+                    routerLink="/shop/orders"
+                    (click)="closeProfile()"
+                  >
+                    <app-icon name="bag" [size]="16" />
+                    سفارشهای من
+                  </a>
+                  <a
+                    class="dropdown-item"
+                    role="menuitem"
+                    routerLink="/shop/wishlist"
+                    (click)="closeProfile()"
+                  >
+                    <app-icon name="heart" [size]="16" />
+                    علاقهمندیها
+                  </a>
+                  <a
+                    class="dropdown-item"
+                    role="menuitem"
+                    routerLink="/shop/compare"
+                    (click)="closeProfile()"
+                  >
+                    <app-icon name="scale" [size]="16" />
+                    مقایسه محصولات
+                  </a>
+                  @if (auth.isStaff()) {
+                    <a
+                      class="dropdown-item"
+                      role="menuitem"
+                      routerLink="/admin"
+                      (click)="closeProfile()"
+                    >
+                      <app-icon name="dashboard" [size]="16" />
+                      پنل مدیریت
+                    </a>
+                  }
+                  <hr class="profile-divider" />
+                  <button
+                    type="button"
+                    class="dropdown-item is-danger"
+                    role="menuitem"
+                    (click)="logout()"
+                  >
+                    <app-icon name="logout" [size]="16" />
+                    خروج از حساب
+                  </button>
+                </div>
+              }
+            </div>
+          } @else {
+            <a class="login-link" routerLink="/admin/login" (click)="closeMobile()">
+              <app-icon name="user" [size]="17" />
+              ورود
             </a>
           }
 
@@ -159,18 +249,146 @@ import { faNumber } from '../../../core/utils/format';
       display: block;
     }
 
-    .admin-link {
-      text-decoration: none;
+    /* ------------------------------ Login link ---------------------------- */
+
+    .login-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 var(--space-3);
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition:
+        background-color var(--transition-fast),
+        color var(--transition-fast);
+
+      &:hover {
+        background: var(--bg-hover);
+        color: var(--accent);
+      }
     }
 
-    @media (max-width: 620px) {
-      .admin-link {
-        display: none;
+    /* ----------------------------- Profile menu ---------------------------- */
+
+    .profile-menu {
+      position: relative;
+    }
+
+    .profile-trigger {
+      display: inline-flex;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .profile-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-full);
+      object-fit: cover;
+      box-shadow: 0 0 0 2px var(--border);
+      transition: box-shadow var(--transition-fast);
+    }
+
+    .profile-trigger:hover .profile-avatar,
+    .profile-menu.is-open .profile-avatar {
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+
+    .profile-avatar-fallback {
+      display: grid;
+      place-items: center;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .profile-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      inset-inline-end: 0;
+      min-width: 205px;
+      padding: 6px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow);
+      z-index: var(--z-overlay);
+      animation: fade-in 0.14s ease both;
+    }
+
+    .profile-head {
+      display: grid;
+      gap: 2px;
+      padding: 8px 10px 10px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 6px;
+    }
+
+    .profile-head-name {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--text-strong);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .profile-head-role {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--text-faint);
+    }
+
+    .profile-divider {
+      margin: 6px 0;
+      border: 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      width: 100%;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: var(--radius-xs);
+      background: transparent;
+      color: var(--text);
+      font-size: 0.86rem;
+      font-weight: 600;
+      text-align: start;
+      text-decoration: none;
+      cursor: pointer;
+
+      &:hover {
+        background: var(--bg-hover);
+      }
+
+      &.is-danger {
+        color: var(--danger);
+
+        &:hover {
+          background: var(--danger-soft);
+        }
+      }
+
+      svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
       }
     }
   `,
   host: {
     '(window:scroll)': 'onScroll()',
+    '(document:click)': 'onDocumentClick($event)',
   },
 })
 export class SiteHeaderComponent {
@@ -186,6 +404,14 @@ export class SiteHeaderComponent {
   protected readonly mobileOpen = signal(false);
   protected readonly searchOpen = signal(false);
   protected readonly query = signal('');
+  protected readonly profileOpen = signal(false);
+
+  private readonly profileMenu = viewChild<ElementRef<HTMLElement>>('profileMenu');
+
+  protected readonly userInitial = computed(() =>
+    (this.auth.displayName() || '؟').trim().charAt(0),
+  );
+  protected readonly roleLabel = computed(() => USER_ROLE_LABELS[this.auth.role() ?? 'subscriber']);
 
   protected readonly siteName = computed(
     () => (this.settings.settings()['siteName'] as string) || 'زوم‌آیتی',
@@ -222,5 +448,27 @@ export class SiteHeaderComponent {
 
   protected closeMobile(): void {
     this.mobileOpen.set(false);
+  }
+
+  /** Close the profile dropdown when clicking anywhere outside it. */
+  protected onDocumentClick(event: MouseEvent): void {
+    const menu = this.profileMenu()?.nativeElement;
+    if (menu && !menu.contains(event.target as Node)) {
+      this.profileOpen.set(false);
+    }
+  }
+
+  protected toggleProfile(): void {
+    this.profileOpen.update((open) => !open);
+  }
+
+  protected closeProfile(): void {
+    this.profileOpen.set(false);
+  }
+
+  protected logout(): void {
+    this.profileOpen.set(false);
+    this.auth.logout();
+    void this.router.navigateByUrl('/');
   }
 }
