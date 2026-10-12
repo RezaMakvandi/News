@@ -91,7 +91,7 @@ import {
       } @else {
         <div class="shop-empty">
           <div class="shop-empty-icon"><app-icon name="bag" [size]="40" /></div>
-          <h2>هنوز سفارشی ثبت نکردهاید</h2>
+          <h2>هنوز سفارشی ثبت نکرده اید</h2>
           <p class="text-muted">با خرید از فروشگاه، سفارشهای شما اینجا نمایش داده میشود.</p>
           <a class="btn btn-primary" routerLink="/shop/products">شروع خرید</a>
         </div>
