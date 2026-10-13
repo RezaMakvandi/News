@@ -11,6 +11,7 @@ import {
   SETTING_COLOR_KEYS,
   SETTING_GROUP_LABELS,
   SETTING_GROUP_ORDER,
+  SETTING_MANAGED_KEYS,
 } from '../../../../core/models/settings.model';
 
 interface SettingRow {
@@ -269,7 +270,7 @@ export class SettingsPage {
         this.saving.set(false);
         this.dirty.clear();
         this.toast.success('تنظیمات ذخیره شد');
-        this.settingsService.load().subscribe();
+        this.settingsService.load(true).subscribe();
       },
       error: (error: Error) => {
         this.saving.set(false);
@@ -282,7 +283,9 @@ export class SettingsPage {
     this.loading.set(true);
     this.settingsService.adminGet().subscribe({
       next: (response) => {
-        this.items.set(response.items ?? []);
+        this.items.set(
+          (response.items ?? []).filter((item) => !SETTING_MANAGED_KEYS.has(item.key)),
+        );
         this.loading.set(false);
       },
       error: () => {

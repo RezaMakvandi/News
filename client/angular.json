@@ -7,7 +7,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-      "news-portal": {
+    "news-portal": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -44,9 +44,7 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "src/main.ts",
-            "polyfills": [
-              "zone.js"
-            ],
+            "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -55,9 +53,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.scss"
-            ]
+            "styles": ["node_modules/@angular/cdk/overlay-prebuilt.css", "src/styles.scss"]
           },
           "configurations": {
             "production": {
@@ -69,8 +65,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                                  "maximumWarning": "24kB",
-                                  "maximumError": "48kB"
+                  "maximumWarning": "24kB",
+                  "maximumError": "48kB"
                 }
               ],
               "outputHashing": "all"
@@ -86,22 +82,22 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-                      "proxyConfig": "proxy.conf.json"
-                    },
-                    "configurations": {
-                      "production": {
-                        "buildTarget": "news-portal:build:production"
-                      },
-                      "development": {
-                        "buildTarget": "news-portal:build:development"
-                      }
-                    },
+            "proxyConfig": "proxy.conf.json"
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "news-portal:build:production"
+            },
+            "development": {
+              "buildTarget": "news-portal:build:development"
+            }
+          },
           "defaultConfiguration": "development"
         },
         "extract-i18n": {
           "builder": "@angular/build:extract-i18n"
-                  }
-                }
-              }
-            }
-          }
+        }
+      }
+    }
+  }
+}

@@ -323,6 +323,15 @@ export const DEFAULT_SETTINGS: Record<
       label:
         "آدرس بازگشت پرداخت",
     },
+  homeLayout:
+    {
+      value:
+        [],
+      group:
+        "appearance",
+      label:
+        "چیدمان صفحه اصلی",
+    },
 };
 
 /** GET /api/settings — public settings map. */

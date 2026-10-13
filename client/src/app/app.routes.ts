@@ -107,6 +107,13 @@ export const routes: Routes = [
         title: 'تنظیمات | پنل مدیریت',
       },
       {
+        path: 'home-layout',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./features/admin/pages/home-layout/home-layout').then((m) => m.HomeLayoutPage),
+        title: 'چیدمان صفحه اصلی | پنل مدیریت',
+      },
+      {
         path: 'shop',
         loadComponent: () =>
           import('./features/admin/pages/shop/shop-dashboard').then((m) => m.ShopDashboardPage),

@@ -40,6 +40,8 @@ export interface PublicSettings {
   breakingEnabled?: boolean;
   themeDefault?: 'light' | 'dark';
   accentColor?: string;
+  /** Ordered home page blocks (see `home-layout.model`). */
+  homeLayout?: unknown;
   [key: string]: unknown;
 }
 
@@ -82,6 +84,9 @@ export const SETTING_BOOLEAN_KEYS = new Set([
 
 /** Keys that hold a colour value. */
 export const SETTING_COLOR_KEYS = new Set(['accentColor']);
+
+/** Keys edited by a dedicated screen, hidden from the generic settings form. */
+export const SETTING_MANAGED_KEYS = new Set(['homeLayout']);
 
 export interface Page {
   _id: string;

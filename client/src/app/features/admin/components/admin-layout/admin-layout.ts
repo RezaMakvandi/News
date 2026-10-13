@@ -66,6 +66,7 @@ const NAV: NavGroup[] = [
     label: 'سیستم',
     items: [
       { path: '/admin/users', label: 'کاربران', icon: 'user', roles: ADMIN_ROLES },
+      { path: '/admin/home-layout', label: 'چیدمان صفحه اصلی', icon: 'grid', roles: ADMIN_ROLES },
       { path: '/admin/settings', label: 'تنظیمات', icon: 'settings', roles: ADMIN_ROLES },
     ],
   },
@@ -87,9 +88,9 @@ const NAV: NavGroup[] = [
           <span class="brand-mark">
             <app-icon name="rss" [size]="20" />
           </span>
-          <span class="brand-text">
-            <span class="brand-name">زوم‌آیتی</span>
-            <span class="brand-tag">پنل مدیریت</span>
+          <span class="brand-label">
+            <strong class="brand-name">زوم‌آیتی</strong>
+            <small class="brand-tag">پنل مدیریت</small>
           </span>
         </a>
 
