@@ -1,9 +1,11 @@
 import { Router } from "express";
+import express from "express";
 import * as articles from "../controllers/article.controller.js";
 import * as categories from "../controllers/category.controller.js";
 import * as comments from "../controllers/comment.controller.js";
 import * as users from "../controllers/user.controller.js";
 import * as media from "../controllers/media.controller.js";
+import * as chunked from "../controllers/media-chunk.controller.js";
 import * as settings from "../controllers/settings.controller.js";
 import * as tags from "../controllers/tag.controller.js";
 import * as stats from "../controllers/stats.controller.js";
@@ -358,6 +360,31 @@ router.put(
 router.delete(
   "/media/:id",
   media.remove,
+);
+
+/* ------------------- Chunked uploads (large videos) --------------------- */
+router.get(
+  "/media/uploads/:uploadId/status",
+  chunked.chunkStatus,
+);
+router.put(
+  "/media/uploads/:uploadId",
+  express.raw(
+    {
+      type: "*/*",
+      limit:
+        "8mb",
+    },
+  ),
+  chunked.uploadChunk,
+);
+router.post(
+  "/media/uploads/:uploadId/complete",
+  chunked.completeChunkedUpload,
+);
+router.delete(
+  "/media/uploads/:uploadId",
+  chunked.abortChunkedUpload,
 );
 
 /* ------------------------------ Settings ------------------------------- */

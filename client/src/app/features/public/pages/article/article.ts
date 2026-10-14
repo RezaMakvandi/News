@@ -1,5 +1,13 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../../../shared/components/icon/icon';
 import { ArticleCardComponent } from '../../../../shared/components/article-card/article-card';
@@ -13,24 +21,36 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { SeoService } from '../../../../core/services/seo.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { SettingsService } from '../../../../core/services/settings.service';
-import { asAuthor, asCategory, asTags, authorName, categoryColor, initial } from '../../../../core/utils/relation';
+import {
+  asAuthor,
+  asCategory,
+  asTags,
+  authorName,
+  categoryColor,
+  initial,
+} from '../../../../core/utils/relation';
 import { faNumber } from '../../../../core/utils/format';
-import type { Article, ArticleCard, ArticleDetailResponse, NeighborsResponse } from '../../../../core/models/article.model';
+import type {
+  Article,
+  ArticleCard,
+  ArticleDetailResponse,
+  NeighborsResponse,
+} from '../../../../core/models/article.model';
 import type { CommentNode } from '../../../../core/models/comment.model';
 
 @Component({
   selector: 'app-article-page',
   imports: [
-      NgTemplateOutlet,
-      RouterLink,
-      IconComponent,
-      ArticleCardComponent,
-      SpinnerComponent,
-      EmptyStateComponent,
-      SafeHtmlPipe,
-      FaDatePipe,
-      FaNumberPipe,
-    ],
+    NgTemplateOutlet,
+    RouterLink,
+    IconComponent,
+    ArticleCardComponent,
+    SpinnerComponent,
+    EmptyStateComponent,
+    SafeHtmlPipe,
+    FaDatePipe,
+    FaNumberPipe,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (loading()) {
@@ -51,11 +71,7 @@ import type { CommentNode } from '../../../../core/models/comment.model';
 
         <header class="article-header">
           @if (category(); as cat) {
-            <a
-              class="badge"
-              [style.background]="catColor()"
-              [routerLink]="['/category', cat.slug]"
-            >
+            <a class="badge" [style.background]="catColor()" [routerLink]="['/category', cat.slug]">
               {{ cat.name }}
             </a>
           }
@@ -445,6 +461,19 @@ import type { CommentNode } from '../../../../core/models/comment.model';
           margin: var(--space-3) 0;
         }
 
+        video {
+          width: 100%;
+          max-width: 100%;
+          height: auto;
+          border-radius: var(--radius);
+          background: #000;
+          display: block;
+        }
+
+        figure.video-embed {
+          margin: var(--space-4) 0;
+        }
+
         ul,
         ol {
           margin: 0 0 var(--space-4);
@@ -556,7 +585,9 @@ import type { CommentNode } from '../../../../core/models/comment.model';
       border-radius: var(--radius);
       font-size: 0.9rem;
       font-weight: 600;
-      transition: border-color var(--transition-fast), color var(--transition-fast);
+      transition:
+        border-color var(--transition-fast),
+        color var(--transition-fast);
 
       &:hover {
         border-color: var(--accent);
@@ -633,7 +664,9 @@ export class ArticlePage {
   protected readonly tags = computed(() => asTags(this.article()?.tags));
   protected readonly catColor = computed(() => categoryColor(this.article()?.category));
   protected readonly authorInitial = computed(() => initial(authorName(this.article()?.author)));
-  protected readonly moderated = computed(() => this.settings.settings()['commentsModeration'] !== false);
+  protected readonly moderated = computed(
+    () => this.settings.settings()['commentsModeration'] !== false,
+  );
 
   protected readonly commentsCount = computed(() =>
     this.comments().reduce((total, comment) => total + 1 + comment.replies.length, 0),
@@ -740,7 +773,9 @@ export class ArticlePage {
   protected vote(comment: CommentNode, type: 'like' | 'dislike'): void {
     this.commentService.vote(comment._id, type).subscribe({
       next: (result) => {
-        this.comments.update((items) => patchVote(items, comment._id, result.likes, result.dislikes));
+        this.comments.update((items) =>
+          patchVote(items, comment._id, result.likes, result.dislikes),
+        );
       },
       error: (error: Error) => this.toast.error(error.message),
     });

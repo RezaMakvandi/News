@@ -1,15 +1,30 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../../../shared/components/icon/icon';
 import { SpinnerComponent } from '../../../../shared/components/spinner/spinner';
-import { ModalComponent } from '../../../../shared/components/modal/modal';
+import { RichTextEditorComponent } from '../../../../features/admin/components/rich-text-editor/rich-text-editor';
+import { MediaPickerModalComponent } from '../../../../features/admin/components/media-picker-modal/media-picker-modal';
 import { ArticleService } from '../../../../core/services/article.service';
 import { CategoryService, TagService } from '../../../../core/services/taxonomy.service';
 import { MediaService } from '../../../../core/services/media.service';
 import { SeoService } from '../../../../core/services/seo.service';
 import { ToastService } from '../../../../core/services/toast.service';
-import type { Article, ArticleImage, ArticlePayload, ArticleStatus, ArticleType } from '../../../../core/models/article.model';
+import type {
+  Article,
+  ArticleImage,
+  ArticlePayload,
+  ArticleStatus,
+  ArticleType,
+} from '../../../../core/models/article.model';
 import type { Category, Tag } from '../../../../core/models/taxonomy.model';
 import type { MediaItem } from '../../../../core/models/media.model';
 import { idOf } from '../../../../core/utils/relation';
@@ -18,13 +33,21 @@ import { ARTICLE_TYPE_LABELS } from '../../../../core/models/article.model';
 
 @Component({
   selector: 'app-article-editor-page',
-  imports: [FormsModule, IconComponent, SpinnerComponent, ModalComponent],
+  imports: [
+    FormsModule,
+    IconComponent,
+    SpinnerComponent,
+    RichTextEditorComponent,
+    MediaPickerModalComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="admin-page-head">
       <div>
         <h1>{{ isNew() ? 'خبر جدید' : 'ویرایش خبر' }}</h1>
-        <p class="text-sm text-muted">{{ isNew() ? 'مشخصات خبر را وارد و منتشر کنید.' : 'ویرایش و به‌روزرسانی خبر فعلی.' }}</p>
+        <p class="text-sm text-muted">
+          {{ isNew() ? 'مشخصات خبر را وارد و منتشر کنید.' : 'ویرایش و به‌روزرسانی خبر فعلی.' }}
+        </p>
       </div>
       <div class="row">
         <button type="button" class="btn btn-ghost" (click)="cancel()">انصراف</button>
@@ -32,7 +55,12 @@ import { ARTICLE_TYPE_LABELS } from '../../../../core/models/article.model';
           <app-icon name="edit" [size]="16" />
           ذخیره پیش‌نویس
         </button>
-        <button type="button" class="btn btn-primary" (click)="save('published')" [disabled]="saving()">
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="save('published')"
+          [disabled]="saving()"
+        >
           @if (saving()) {
             <span class="spinner spinner-sm"></span>
           } @else {
@@ -78,16 +106,12 @@ import { ARTICLE_TYPE_LABELS } from '../../../../core/models/article.model';
 
             <div class="field">
               <label class="label" for="content">متن خبر <span class="req">*</span></label>
-              <textarea
-                id="content"
-                class="textarea editor-area"
+              <app-rich-text-editor
                 name="content"
-                rows="18"
-                dir="auto"
                 [class.is-invalid]="errors()['content']"
+                placeholder="متن خبر را اینجا بنویسید… از نوار ابزار برای افزودن تصویر و ویدیو استفاده کنید"
                 [(ngModel)]="form.content"
-                placeholder="متن HTML خبر را اینجا بنویسید"
-              ></textarea>
+              />
               @if (errors()['content']) {
                 <span class="error-text">{{ errors()['content'] }}</span>
               }
@@ -101,7 +125,11 @@ import { ARTICLE_TYPE_LABELS } from '../../../../core/models/article.model';
               <label class="label">تصویر شاخص</label>
               <div class="row">
                 @if (form.cover) {
-                  <img class="cover-preview" [src]="form.cover" [alt]="form.coverAlt || form.title" />
+                  <img
+                    class="cover-preview"
+                    [src]="form.cover"
+                    [alt]="form.coverAlt || form.title"
+                  />
                 }
                 <input
                   class="input grow"
@@ -131,16 +159,32 @@ import { ARTICLE_TYPE_LABELS } from '../../../../core/models/article.model';
               <label class="label">گالری تصاویر</label>
               @for (image of form.gallery; track $index) {
                 <div class="row" style="margin-bottom: var(--space-2)">
-                  <input class="input grow" dir="ltr" [ngModel]="image.url" (ngModelChange)="updateGallery($index, { url: $event })" placeholder="نشانی تصویر" />
-                  <input class="input" [ngModel]="image.alt ?? ''" (ngModelChange)="updateGallery($index, { alt: $event })" placeholder="متن جایگزین" />
-                  <button type="button" class="btn btn-ghost btn-icon btn-sm is-danger" (click)="removeGallery($index)" aria-label="حذف">
+                  <input
+                    class="input grow"
+                    dir="ltr"
+                    [ngModel]="image.url"
+                    (ngModelChange)="updateGallery($index, { url: $event })"
+                    placeholder="نشانی تصویر"
+                  />
+                  <input
+                    class="input"
+                    [ngModel]="image.alt ?? ''"
+                    (ngModelChange)="updateGallery($index, { alt: $event })"
+                    placeholder="متن جایگزین"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-icon btn-sm is-danger"
+                    (click)="removeGallery($index)"
+                    aria-label="حذف"
+                  >
                     <app-icon name="trash" [size]="16" />
                   </button>
                 </div>
               }
-              <button type="button" class="btn btn-ghost btn-sm" (click)="addGallery()">
+              <button type="button" class="btn btn-ghost btn-sm" (click)="pickMedia('gallery')">
                 <app-icon name="plus-circle" [size]="16" />
-                افزودن تصویر
+                افزودن از کتابخانه
               </button>
             </div>
           </div>
@@ -154,7 +198,12 @@ import { ARTICLE_TYPE_LABELS } from '../../../../core/models/article.model';
             </div>
             <div class="field">
               <label class="label">توضیحات سئو</label>
-              <textarea class="textarea" rows="3" [(ngModel)]="form.seo.description" name="seoDescription"></textarea>
+              <textarea
+                class="textarea"
+                rows="3"
+                [(ngModel)]="form.seo.description"
+                name="seoDescription"
+              ></textarea>
             </div>
             <div class="field">
               <label class="label">کلیدواژه‌ها (با ، جدا کنید)</label>
@@ -169,7 +218,12 @@ import { ARTICLE_TYPE_LABELS } from '../../../../core/models/article.model';
 
             <div class="field">
               <label class="label">دسته‌بندی <span class="req">*</span></label>
-              <select class="select" [(ngModel)]="form.category" name="category" [class.is-invalid]="errors()['category']">
+              <select
+                class="select"
+                [(ngModel)]="form.category"
+                name="category"
+                [class.is-invalid]="errors()['category']"
+              >
                 <option value="">انتخاب کنید</option>
                 @for (category of categories(); track category._id) {
                   <option [value]="category._id">{{ category.name }}</option>
@@ -239,15 +293,31 @@ import { ARTICLE_TYPE_LABELS } from '../../../../core/models/article.model';
 
             <div class="field">
               <label class="label">زمان انتشار (اختیاری)</label>
-              <input class="input" type="datetime-local" [(ngModel)]="scheduledAt" name="scheduledAt" />
+              <input
+                class="input"
+                type="datetime-local"
+                [(ngModel)]="scheduledAt"
+                name="scheduledAt"
+              />
             </div>
 
             <div class="field">
               <label class="label">منبع خبر</label>
-              <input class="input" [(ngModel)]="form.source.name" name="sourceName" placeholder="نام منبع" />
+              <input
+                class="input"
+                [(ngModel)]="form.source.name"
+                name="sourceName"
+                placeholder="نام منبع"
+              />
             </div>
             <div class="field">
-              <input class="input" dir="ltr" [(ngModel)]="form.source.url" name="sourceUrl" placeholder="https://…" />
+              <input
+                class="input"
+                dir="ltr"
+                [(ngModel)]="form.source.url"
+                name="sourceUrl"
+                placeholder="https://…"
+              />
             </div>
           </div>
 
@@ -273,16 +343,14 @@ import { ARTICLE_TYPE_LABELS } from '../../../../core/models/article.model';
     }
 
     @if (mediaPickerOpen()) {
-      <app-modal title="انتخاب تصویر" [open]="true" size="lg" (closed)="mediaPickerOpen.set(false)">
-        <div class="media-grid modal-media-grid">
-          @for (media of mediaItems(); track media._id) {
-            <button type="button" class="media-item" (click)="selectMedia(media)">
-              <img [src]="media.url" [alt]="media.alt || media.originalName" loading="lazy" />
-              <span class="media-name clamp-1">{{ media.originalName }}</span>
-            </button>
-          }
-        </div>
-      </app-modal>
+      <app-media-picker-modal
+        [open]="true"
+        mode="image"
+        [multiple]="pickerTarget() === 'gallery'"
+        [title]="pickerTarget() === 'gallery' ? 'انتخاب تصاویر گالری' : 'انتخاب تصویر شاخص'"
+        (picked)="onPickerPicked($event)"
+        (closed)="mediaPickerOpen.set(false)"
+      />
     }
   `,
   styles: `
@@ -295,13 +363,6 @@ import { ARTICLE_TYPE_LABELS } from '../../../../core/models/article.model';
 
     .stack-lg > * + * {
       margin-top: var(--space-4);
-    }
-
-    .editor-area {
-      min-height: 360px;
-      font-family: 'Vazirmatn Variable', monospace;
-      direction: ltr;
-      text-align: left;
     }
 
     .cover-preview {
@@ -324,39 +385,6 @@ import { ARTICLE_TYPE_LABELS } from '../../../../core/models/article.model';
       background: var(--bg-inset);
     }
 
-    .media-grid.modal-media-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    .media-item {
-      border: 2px solid transparent;
-      border-radius: var(--radius-sm);
-      padding: 4px;
-      background: transparent;
-      cursor: pointer;
-      display: grid;
-      gap: 4px;
-      text-align: center;
-      transition: border-color var(--transition-fast);
-    }
-
-    .media-item:hover,
-    .media-item:focus-visible {
-      border-color: var(--accent);
-    }
-
-    .media-item img {
-      width: 100%;
-      height: 90px;
-      object-fit: cover;
-      border-radius: var(--radius-xs);
-    }
-
-    .media-name {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
     @media (max-width: 1024px) {
       .editor-layout {
         grid-template-columns: minmax(0, 1fr);
@@ -371,7 +399,6 @@ export class ArticleEditorPage {
   private readonly articleService = inject(ArticleService);
   private readonly categoryService = inject(CategoryService);
   private readonly tagService = inject(TagService);
-  private readonly mediaService = inject(MediaService);
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
   private readonly seo = inject(SeoService);
@@ -379,9 +406,9 @@ export class ArticleEditorPage {
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
   protected readonly mediaPickerOpen = signal(false);
+  protected readonly pickerTarget = signal<'cover' | 'gallery'>('cover');
   protected readonly categories = signal<Category[]>([]);
   protected readonly availableTags = signal<Tag[]>([]);
-  protected readonly mediaItems = signal<MediaItem[]>([]);
 
   protected readonly isNew = computed(() => !this.id());
   protected readonly errors = signal<Record<string, string>>({});
@@ -421,7 +448,9 @@ export class ArticleEditorPage {
     });
 
     this.categoryService.list(true).subscribe({ next: (items) => this.categories.set(items) });
-    this.tagService.list({ limit: 100, sort: 'popular' }).subscribe({ next: (list) => this.availableTags.set(list.items ?? []) });
+    this.tagService
+      .list({ limit: 100, sort: 'popular' })
+      .subscribe({ next: (list) => this.availableTags.set(list.items ?? []) });
   }
 
   protected types(): { value: ArticleType; label: string }[] {
@@ -450,21 +479,22 @@ export class ArticleEditorPage {
   }
 
   protected pickMedia(target: 'cover' | 'gallery'): void {
-    void target;
+    this.pickerTarget.set(target);
     this.mediaPickerOpen.set(true);
-    if (!this.mediaItems().length) {
-      this.mediaService.list({ limit: 60 }).subscribe({
-        next: (result) => this.mediaItems.set(result.items),
-      });
-    }
   }
 
-  protected selectMedia(media: MediaItem): void {
-    if (!this.form.cover) {
-      this.form.cover = media.url;
-      this.form.coverAlt = media.alt ?? this.form.title;
+  /** Applies the items chosen in the library modal to cover or gallery. */
+  protected onPickerPicked(items: MediaItem[]): void {
+    if (!items.length) return;
+
+    if (this.pickerTarget() === 'cover') {
+      const item = items[0];
+      this.form.cover = item.url;
+      this.form.coverAlt = item.alt || this.form.title;
     } else {
-      this.form.gallery.push({ url: media.url, alt: media.alt ?? '' });
+      for (const item of items) {
+        this.form.gallery.push({ url: item.url, alt: item.alt ?? '' });
+      }
     }
     this.mediaPickerOpen.set(false);
   }
@@ -575,7 +605,8 @@ export class ArticleEditorPage {
   private validate(): boolean {
     const errors: Record<string, string> = {};
     if (this.form.title.trim().length < 3) errors['title'] = 'عنوان باید حداقل ۳ کاراکتر باشد';
-    if (this.form.content.trim().length < 10) errors['content'] = 'متن خبر باید حداقل ۱۰ کاراکتر باشد';
+    if (this.form.content.trim().length < 10)
+      errors['content'] = 'متن خبر باید حداقل ۱۰ کاراکتر باشد';
     if (!this.form.category) errors['category'] = 'انتخاب دسته‌بندی الزامی است';
     this.errors.set(errors);
     return Object.keys(errors).length === 0;

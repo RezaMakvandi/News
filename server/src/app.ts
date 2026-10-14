@@ -167,7 +167,26 @@ export const createApp =
 
     app.use(
       "/api",
-      apiLimiter,
+      (
+        req,
+        res,
+        next,
+      ) => {
+        // Chunked video uploads send hundreds of small PUTs; the shared
+        // limiter would reject them long before a 2 GB file completes.
+        if (
+          req.path.startsWith(
+            "/admin/media/uploads/",
+          )
+        ) {
+          return next();
+        }
+        return apiLimiter(
+          req,
+          res,
+          next,
+        );
+      },
     );
 
     app.get(

@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { concat, type Observable } from 'rxjs';
+import { ChunkedUploadService } from '../../../../core/services/chunked-upload.service';
 import { IconComponent } from '../../../../shared/components/icon/icon';
 import { SpinnerComponent } from '../../../../shared/components/spinner/spinner';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state';
@@ -12,6 +14,12 @@ import { ToastService } from '../../../../core/services/toast.service';
 import type { MediaItem } from '../../../../core/models/media.model';
 import { formatFileSize } from '../../../../core/models/media.model';
 import { FaNumberPipe } from '../../../../shared/pipes/format.pipe';
+
+/** Files above this size no longer fit one multipart request (server cap is 12 MB). */
+const MAX_MULTIPART_SIZE = 10 * 1024 * 1024;
+
+const isVideoFile = (file: File): boolean =>
+  file.type.startsWith('video/') || /\.(mp4|webm|ogv|ogg|mov|mkv|m4v)$/i.test(file.name);
 
 @Component({
   selector: 'app-media-page',
@@ -43,7 +51,7 @@ import { FaNumberPipe } from '../../../../shared/pipes/format.pipe';
       type="file"
       multiple
       hidden
-      accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,image/avif,application/pdf,video/mp4,video/webm"
+      accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,image/avif,application/pdf,video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska,.mp4,.webm,.mov,.mkv"
       (change)="onFilesSelected($event)"
     />
 
@@ -69,16 +77,27 @@ import { FaNumberPipe } from '../../../../shared/pipes/format.pipe';
           class="input"
           type="search"
           placeholder="جستجو در نام فایل…"
-          [ngModel]="searchTerm()" (ngModelChange)="onSearchInput()"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="onSearchInput()"
           (input)="onSearchInput()"
         />
       </div>
     </div>
 
     @if (uploading()) {
-      <div class="card card-pad row" style="gap: var(--space-2); align-items: center; margin-bottom: var(--space-4)">
+      <div
+        class="card card-pad row"
+        style="gap: var(--space-2); align-items: center; margin-bottom: var(--space-4)"
+      >
         <span class="spinner spinner-sm"></span>
-        <span class="text-sm">در حال آپلود فایل‌ها…</span>
+        @if (progress() !== null) {
+          <span class="text-sm">در حال آپلود… {{ progress() }}٪</span>
+          <div class="upload-bar">
+            <span class="upload-fill" [style.width.%]="progress()"></span>
+          </div>
+        } @else {
+          <span class="text-sm">در حال آپلود فایل‌ها…</span>
+        }
       </div>
     }
 
@@ -101,7 +120,10 @@ import { FaNumberPipe } from '../../../../shared/pipes/format.pipe';
               <img [src]="item.url" [alt]="item.alt || item.originalName" loading="lazy" />
             } @else {
               <div class="media-placeholder">
-                <app-icon [name]="item.mimeType.startsWith('video/') ? 'video' : 'file'" [size]="24" />
+                <app-icon
+                  [name]="item.mimeType.startsWith('video/') ? 'video' : 'file'"
+                  [size]="24"
+                />
               </div>
             }
             <div class="media-info">
@@ -113,7 +135,11 @@ import { FaNumberPipe } from '../../../../shared/pipes/format.pipe';
       </div>
 
       <div class="row" style="justify-content: center; margin-top: var(--space-5)">
-        <app-pagination [page]="page()" [totalPages]="totalPages()" (pageChange)="goToPage($event)" />
+        <app-pagination
+          [page]="page()"
+          [totalPages]="totalPages()"
+          (pageChange)="goToPage($event)"
+        />
       </div>
     }
 
@@ -129,7 +155,12 @@ import { FaNumberPipe } from '../../../../shared/pipes/format.pipe';
               <label class="label">آدرس فایل</label>
               <div class="row">
                 <input class="input grow" dir="ltr" readonly [value]="item.url" />
-                <button type="button" class="btn btn-ghost btn-icon" (click)="copyUrl(item)" aria-label="کپی آدرس">
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-icon"
+                  (click)="copyUrl(item)"
+                  aria-label="کپی آدرس"
+                >
                   <app-icon name="copy" [size]="16" />
                 </button>
               </div>
@@ -155,12 +186,22 @@ import { FaNumberPipe } from '../../../../shared/pipes/format.pipe';
         </div>
 
         <div modalFooter>
-          <button type="button" class="btn btn-danger-soft" (click)="confirmDelete(detail()!)" [disabled]="deleting()">
+          <button
+            type="button"
+            class="btn btn-danger-soft"
+            (click)="confirmDelete(detail()!)"
+            [disabled]="deleting()"
+          >
             <app-icon name="trash" [size]="16" />
             حذف
           </button>
           <button type="button" class="btn btn-ghost" (click)="detailOpen.set(false)">بستن</button>
-          <button type="button" class="btn btn-primary" (click)="saveDetail()" [disabled]="saving()">
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="saveDetail()"
+            [disabled]="saving()"
+          >
             @if (saving()) {
               <span class="spinner spinner-sm"></span>
             }
@@ -180,6 +221,23 @@ import { FaNumberPipe } from '../../../../shared/pipes/format.pipe';
     />
   `,
   styles: `
+    .upload-bar {
+      flex: 1;
+      max-width: 240px;
+      height: 6px;
+      border-radius: var(--radius-full);
+      background: var(--bg-inset);
+      overflow: hidden;
+    }
+
+    .upload-fill {
+      display: block;
+      height: 100%;
+      border-radius: var(--radius-full);
+      background: var(--accent);
+      transition: width var(--transition-fast);
+    }
+
     .media-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -189,7 +247,9 @@ import { FaNumberPipe } from '../../../../shared/pipes/format.pipe';
     .media-item {
       overflow: hidden;
       cursor: pointer;
-      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+      transition:
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast);
     }
 
     .media-item:hover {
@@ -234,11 +294,13 @@ import { FaNumberPipe } from '../../../../shared/pipes/format.pipe';
 })
 export class MediaPage {
   private readonly mediaService = inject(MediaService);
+  private readonly chunkedUpload = inject(ChunkedUploadService);
   private readonly toast = inject(ToastService);
   private readonly seo = inject(SeoService);
 
   protected readonly loading = signal(true);
   protected readonly uploading = signal(false);
+  protected readonly progress = signal<number | null>(null);
   protected readonly items = signal<MediaItem[]>([]);
   protected readonly folders = signal<string[]>([]);
   protected readonly page = signal(1);
@@ -287,22 +349,55 @@ export class MediaPage {
   protected onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = input.files ? Array.from(input.files) : [];
+    input.value = '';
     if (!files.length) return;
 
+    const folder = this.folder() || 'general';
+    // Videos go through the resumable chunked uploader (they easily exceed
+    // the 12 MB multipart cap); everything else keeps the fast batch path.
+    const chunkedFiles = files.filter(isVideoFile);
+    const multipartFiles = files.filter((file) => !chunkedFiles.includes(file));
+
+    // Non-video files cannot use the chunked endpoint (video-only server
+    // side), so reject oversized ones up front with a clear message.
+    const oversized = multipartFiles.filter((file) => file.size > MAX_MULTIPART_SIZE);
+    const batch = multipartFiles.filter((file) => !oversized.includes(file));
+    if (oversized.length) {
+      const names = oversized.map((file) => file.name).join('، ');
+      this.toast.error(`حجم این فایل‌ها بیش از ۱۰ مگابایت است و آپلود نشدند: ${names}`);
+    }
+
+    if (!batch.length && !chunkedFiles.length) return;
+
     this.uploading.set(true);
-    this.mediaService.upload(files, this.folder() || 'general').subscribe({
-      next: () => {
+    this.progress.set(null);
+
+    const tasks: Observable<unknown>[] = [];
+    if (batch.length) tasks.push(this.mediaService.upload(batch, folder));
+    chunkedFiles.forEach((file) =>
+      tasks.push(
+        this.chunkedUpload.upload(file, {
+          folder: 'article-videos',
+          onProgress: (progress) =>
+            this.progress.set(Math.round((progress.loaded / progress.total) * 100)),
+        }),
+      ),
+    );
+
+    concat(...tasks).subscribe({
+      complete: () => {
         this.uploading.set(false);
+        this.progress.set(null);
         this.toast.success('فایل‌ها آپلود شدند');
         this.load();
       },
       error: (error: Error) => {
         this.uploading.set(false);
+        this.progress.set(null);
         this.toast.error(error.message || 'آپلود انجام نشد');
+        this.load();
       },
     });
-
-    input.value = '';
   }
 
   protected openDetail(item: MediaItem): void {
