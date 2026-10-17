@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../../../shared/components/icon/icon';
 import { SpinnerComponent } from '../../../../shared/components/spinner/spinner';
+import { AdminService } from '../../../../core/services/admin.service';
 import { SettingsService } from '../../../../core/services/settings.service';
 import { SeoService } from '../../../../core/services/seo.service';
 import { ToastService } from '../../../../core/services/toast.service';
@@ -12,6 +13,7 @@ import {
   SETTING_GROUP_LABELS,
   SETTING_GROUP_ORDER,
   SETTING_MANAGED_KEYS,
+  SETTING_SECRET_KEYS,
 } from '../../../../core/models/settings.model';
 
 interface SettingRow {
@@ -109,6 +111,17 @@ interface SettingRow {
                       [ngModel]="asString(item.value)"
                       (ngModelChange)="setValue(item.key, $event)"
                     />
+                  } @else if (isSecret(item.key)) {
+                    <label class="label">{{ item.label }}</label>
+                    <input
+                      class="input"
+                      type="password"
+                      dir="ltr"
+                      autocomplete="new-password"
+                      placeholder="••••••••"
+                      [ngModel]="asString(item.value)"
+                      (ngModelChange)="setValue(item.key, $event)"
+                    />
                   } @else {
                     <label class="label">{{ item.label }}</label>
                     <input
@@ -124,6 +137,27 @@ interface SettingRow {
                 </div>
               }
             </div>
+
+            @if (group === 'mail') {
+              <div class="mail-test">
+                <p class="field-hint">
+                  پس از ذخیره تنظیمات، برای اطمینان از درستی اطلاعات SMTP یک ایمیل آزمایشی بفرستید.
+                </p>
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-sm"
+                  (click)="sendTestMail()"
+                  [disabled]="testingMail()"
+                >
+                  @if (testingMail()) {
+                    <span class="spinner spinner-sm"></span>
+                  } @else {
+                    <app-icon name="send" [size]="14" />
+                  }
+                  ارسال ایمیل آزمایشی
+                </button>
+              </div>
+            }
           </div>
         }
       </div>
@@ -157,6 +191,20 @@ interface SettingRow {
       color: var(--text-muted);
     }
 
+    .mail-test {
+      margin-top: var(--space-4);
+      padding-top: var(--space-4);
+      border-top: 1px dashed var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      align-items: flex-start;
+    }
+
+    .mail-test .field-hint {
+      margin: 0;
+    }
+
     .mono {
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size: 0.85rem;
@@ -172,11 +220,13 @@ interface SettingRow {
 })
 export class SettingsPage {
   private readonly settingsService = inject(SettingsService);
+  private readonly adminService = inject(AdminService);
   private readonly toast = inject(ToastService);
   private readonly seo = inject(SeoService);
 
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
+  protected readonly testingMail = signal(false);
   protected readonly items = signal<SettingRow[]>([]);
 
   private readonly dirty = new Map<string, unknown>();
@@ -208,7 +258,16 @@ export class SettingsPage {
   }
 
   protected isNumber(key: string): boolean {
-    return key === 'postsPerPage' || key === 'shippingCost' || key === 'freeShippingFrom';
+    return (
+      key === 'postsPerPage' ||
+      key === 'shippingCost' ||
+      key === 'freeShippingFrom' ||
+      key === 'smtpPort'
+    );
+  }
+
+  protected isSecret(key: string): boolean {
+    return SETTING_SECRET_KEYS.has(key);
   }
 
   protected isLongText(key: string): boolean {
@@ -232,9 +291,40 @@ export class SettingsPage {
         return 'در حالت تست، پرداخت‌ها در محیط آزمایشی زرین‌پال انجام می‌شوند و پول واقعی جابه‌جا نمی‌شود.';
       case 'payCallbackUrl':
         return 'آدرس بازگشت پس از پرداخت. خالی بگذارید تا به‌صورت خودکار ساخته شود.';
+      case 'adminEmail':
+        return 'پاسخ پیامهای فرم تماس از این ایمیل ارسال میشود. بهتر است با نام کاربری SMTP یکسان باشد.';
+      case 'smtpHost':
+        return 'آدرس سرور ایمیل، مثل smtp.gmail.com یا mail.example.com. تا زمانی که این مقدار خالی باشد امکان پاسخدهی ایمیلی وجود ندارد.';
+      case 'smtpPort':
+        return 'معمولاً ۵۸۷ برای STARTTLS و ۴۶۵ برای SSL.';
+      case 'smtpSecure':
+        return 'برای پورت ۴۶۵ فعال کنید؛ برای پورت ۵۸۷ غیرفعال بگذارید.';
+      case 'smtpUser':
+        return 'در بیشتر سرویسها با ایمیل فرستنده یکسان است.';
+      case 'smtpPass':
+        return this.smtpPassHint();
       default:
         return '';
     }
+  }
+
+  /** Hint under the SMTP password field, including the stored length. */
+  private smtpPassHint(): string {
+    const base =
+      'برای Gmail رمز اصلی کار نمیکند؛ باید تأیید دو مرحلهای را روشن کرده و از myaccount.google.com/apppasswords یک «رمز برنامه» (App Password) ۱۶ کاراکتری بسازید. فاصلههای داخل رمز برنامه مشکلی ایجاد نمیکند.';
+
+    const row = this.items().find((item) => item.key === 'smtpPass');
+    const length = typeof row?.value === 'string' ? row.value.length : 0;
+    if (!length) return base;
+
+    const host = this.items().find((item) => item.key === 'smtpHost');
+    const hostValue = typeof host?.value === 'string' ? host.value : '';
+    const isGmail = /gmail\.com$|googlemail\.com$/i.test(hostValue);
+
+    if (isGmail && length !== 16) {
+      return `${base} (رمز ذخیرهشده ${length} کاراکتر است؛ رمز برنامه گوگل باید ۱۶ کاراکتر باشد.)`;
+    }
+    return `${base} (طول رمز ذخیرهشده: ${length} کاراکتر)`;
   }
 
   protected asBool(value: unknown): boolean {
@@ -254,6 +344,29 @@ export class SettingsPage {
 
   protected setValue(key: string, value: unknown): void {
     this.dirty.set(key, value);
+  }
+
+  /** Sends a test email using the currently saved SMTP settings. */
+  protected sendTestMail(): void {
+    if (this.dirty.size) {
+      this.toast.info('ابتدا تنظیمات را ذخیره کنید، سپس ایمیل آزمایشی بفرستید');
+      return;
+    }
+
+    this.testingMail.set(true);
+    const to = this.items().find((item) => item.key === 'adminEmail');
+    const email = typeof to?.value === 'string' ? to.value : undefined;
+
+    this.adminService.sendTestMail(email || undefined).subscribe({
+      next: () => {
+        this.testingMail.set(false);
+        this.toast.success('ایمیل آزمایشی ارسال شد. صندوق ورودی را بررسی کنید.');
+      },
+      error: (error: Error) => {
+        this.testingMail.set(false);
+        this.toast.error(error.message || 'ارسال ایمیل آزمایشی ناموفق بود');
+      },
+    });
   }
 
   protected save(): void {

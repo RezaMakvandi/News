@@ -153,4 +153,53 @@ export const env =
           .SHOP_ENABLED,
         true,
       ),
+
+    /* ------------------------------- Mail -------------------------------- */
+    adminEmail:
+      (
+        process
+          .env
+          .ADMIN_EMAIL ??
+        ""
+      ).trim(),
+    mailFromName:
+      (
+        process
+          .env
+          .MAIL_FROM_NAME ??
+        ""
+      ).trim(),
+    smtpHost:
+      (
+        process
+          .env
+          .SMTP_HOST ??
+        ""
+      ).trim(),
+    smtpPort:
+      Number(
+        process
+          .env
+          .SMTP_PORT ??
+          587,
+      ),
+    smtpSecure:
+      toBool(
+        process
+          .env
+          .SMTP_SECURE,
+        false,
+      ),
+    smtpUser:
+      (
+        process
+          .env
+          .SMTP_USER ??
+        ""
+      ).trim(),
+    smtpPass:
+      process
+        .env
+        .SMTP_PASS ??
+      "",
   };

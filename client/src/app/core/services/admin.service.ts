@@ -15,6 +15,22 @@ export interface MessageList {
   meta: PageMeta & { unread?: number };
 }
 
+/** SMTP configuration summary exposed to the admin panel (no secrets). */
+export interface MailStatus {
+  configured: boolean;
+  hasAdminEmail: boolean;
+  adminEmail: string;
+  fromName: string;
+  smtpHost: string;
+  smtpPort: number;
+  smtpSecure: boolean;
+  smtpUser: string;
+  hasPassword: boolean;
+  passwordLength: number;
+  ready: boolean;
+  warning: string;
+}
+
 /** Admin-only resources: subscribers, contact messages and dashboard statistics. */
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -23,12 +39,17 @@ export class AdminService {
   /* ----------------------------- Subscribers ----------------------------- */
 
   /** GET /api/admin/subscribers */
-  subscribers(query: { page?: number; limit?: number; q?: string; active?: string } = {}): Observable<SubscriberList> {
+  subscribers(
+    query: { page?: number; limit?: number; q?: string; active?: string } = {},
+  ): Observable<SubscriberList> {
     return this.api.getListWithMeta<Subscriber>('admin/subscribers', { params: { ...query } });
   }
 
   /** PUT /api/admin/subscribers/:id */
-  updateSubscriber(id: string, payload: { isActive?: boolean; name?: string }): Observable<Subscriber> {
+  updateSubscriber(
+    id: string,
+    payload: { isActive?: boolean; name?: string },
+  ): Observable<Subscriber> {
     return this.api.put<Subscriber>(`admin/subscribers/${id}`, payload);
   }
 
@@ -40,18 +61,40 @@ export class AdminService {
   /* ------------------------------- Messages ------------------------------ */
 
   /** GET /api/admin/messages */
-  messages(query: { page?: number; limit?: number; status?: string; q?: string } = {}): Observable<MessageList> {
+  messages(
+    query: { page?: number; limit?: number; status?: string; q?: string } = {},
+  ): Observable<MessageList> {
     return this.api.getListWithMeta<ContactMessage>('admin/messages', { params: { ...query } });
   }
 
   /** PUT /api/admin/messages/:id */
-  updateMessage(id: string, payload: { status?: MessageStatus; reply?: string }): Observable<ContactMessage> {
+  updateMessage(
+    id: string,
+    payload: { status?: MessageStatus; reply?: string },
+  ): Observable<ContactMessage> {
     return this.api.put<ContactMessage>(`admin/messages/${id}`, payload);
+  }
+
+  /** PUT /api/admin/messages/:id — writes a reply and emails the sender. */
+  replyToMessage(id: string, reply: string): Observable<{ data: ContactMessage; message: string }> {
+    return this.api.putWithMessage<ContactMessage>(`admin/messages/${id}`, { reply });
   }
 
   /** DELETE /api/admin/messages/:id */
   deleteMessage(id: string): Observable<{ id: string }> {
     return this.api.delete<{ id: string }>(`admin/messages/${id}`);
+  }
+
+  /* --------------------------------- Mail -------------------------------- */
+
+  /** GET /api/admin/mail/status */
+  mailStatus(): Observable<MailStatus> {
+    return this.api.get<MailStatus>('admin/mail/status');
+  }
+
+  /** POST /api/admin/mail/test — sends a test email to verify SMTP. */
+  sendTestMail(email?: string): Observable<null> {
+    return this.api.post<null>('admin/mail/test', { email });
   }
 
   /* -------------------------------- Stats -------------------------------- */

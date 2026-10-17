@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../../../shared/components/icon/icon';
 import { SpinnerComponent } from '../../../../shared/components/spinner/spinner';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { ModalComponent } from '../../../../shared/components/modal/modal';
-import { AdminService } from '../../../../core/services/admin.service';
+import { AdminService, type MailStatus } from '../../../../core/services/admin.service';
 import { SeoService } from '../../../../core/services/seo.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import type { ContactMessage, MessageStatus } from '../../../../core/models/settings.model';
@@ -25,6 +26,7 @@ const STATUS_TABS = [
   selector: 'app-messages-page',
   imports: [
     FormsModule,
+    RouterLink,
     IconComponent,
     SpinnerComponent,
     EmptyStateComponent,
@@ -41,7 +43,49 @@ const STATUS_TABS = [
         <h1>پیام‌های تماس</h1>
         <p class="text-sm text-muted">مدیریت پیام‌های ارسال‌شده از فرم تماس.</p>
       </div>
+      <a class="btn btn-ghost" routerLink="/admin/settings">
+        <app-icon name="settings" [size]="18" />
+        تنظیمات ایمیل
+      </a>
     </div>
+
+    @if (mailStatus(); as mail) {
+      @if (!mail.ready) {
+        <div class="notice notice-warning">
+          <app-icon name="warning" [size]="18" />
+          <div>
+            <strong>ایمیل پاسخدهی تنظیم نشده است.</strong>
+            <p class="text-sm">
+              برای پاسخدهی، ابتدا از بخش تنظیمات، «ایمیل مدیر فروشگاه» و اطلاعات سرور SMTP را وارد
+              کنید.
+            </p>
+          </div>
+          <a class="btn btn-primary btn-sm" routerLink="/admin/settings">تنظیمات ایمیل</a>
+        </div>
+      } @else {
+        <div class="notice notice-info">
+          <app-icon name="mail" [size]="18" />
+          <div>
+            <span class="text-sm">
+              پاسخها از ایمیل
+              <span dir="ltr">{{ mail.adminEmail }}</span>
+              برای فرستنده ارسال میشوند.
+            </span>
+          </div>
+        </div>
+      }
+
+      @if (mail.ready && mail.warning) {
+        <div class="notice notice-warning">
+          <app-icon name="warning" [size]="18" />
+          <div>
+            <strong>تنظیمات ایمیل نیازمند بررسی است.</strong>
+            <p class="text-sm">{{ mail.warning }}</p>
+          </div>
+          <a class="btn btn-primary btn-sm" routerLink="/admin/settings">تنظیمات ایمیل</a>
+        </div>
+      }
+    }
 
     <div class="filter-bar">
       <div class="tabs">
@@ -67,7 +111,8 @@ const STATUS_TABS = [
           class="input"
           type="search"
           placeholder="جستجو در پیام‌ها…"
-          [ngModel]="searchTerm()" (ngModelChange)="onSearchInput()"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="onSearchInput()"
           (input)="onSearchInput()"
         />
       </div>
@@ -88,7 +133,9 @@ const STATUS_TABS = [
             <div class="row wrap" style="gap: var(--space-2); align-items: center">
               <strong>{{ message.name }}</strong>
               <span class="text-xs text-faint" dir="ltr">{{ message.email }}</span>
-              <span class="badge" [class]="statusBadge(message.status)">{{ statusLabel(message.status) }}</span>
+              <span class="badge" [class]="statusBadge(message.status)">{{
+                statusLabel(message.status)
+              }}</span>
             </div>
 
             <h4 style="margin: var(--space-2) 0">{{ message.subject }}</h4>
@@ -96,7 +143,15 @@ const STATUS_TABS = [
 
             @if (message.reply) {
               <div class="comment-admin-reply">
-                <span class="reply-label">پاسخ شما:</span>
+                <span class="reply-label">
+                  پاسخ شما
+                  @if (message.repliedAt) {
+                    <span class="text-xs text-faint"
+                      >— {{ message.repliedAt | faDate: 'relative' }}</span
+                    >
+                  }
+                  :
+                </span>
                 {{ message.reply }}
               </div>
             }
@@ -108,7 +163,11 @@ const STATUS_TABS = [
 
               <div class="row">
                 @if (message.status === 'unread') {
-                  <button type="button" class="btn btn-ghost btn-sm" (click)="setStatus(message, 'read')">
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-sm"
+                    (click)="setStatus(message, 'read')"
+                  >
                     <app-icon name="check" [size]="14" />
                     خوانده شد
                   </button>
@@ -117,11 +176,20 @@ const STATUS_TABS = [
                   <app-icon name="send" [size]="14" />
                   پاسخ
                 </button>
-                <button type="button" class="btn btn-ghost btn-sm" (click)="setStatus(message, 'archived')">
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-sm"
+                  (click)="setStatus(message, 'archived')"
+                >
                   <app-icon name="folder" [size]="14" />
                   بایگانی
                 </button>
-                <button type="button" class="btn btn-ghost btn-icon btn-sm is-danger" (click)="confirmDelete(message)" aria-label="حذف">
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-icon btn-sm is-danger"
+                  (click)="confirmDelete(message)"
+                  aria-label="حذف"
+                >
                   <app-icon name="trash" [size]="14" />
                 </button>
               </div>
@@ -131,31 +199,69 @@ const STATUS_TABS = [
       </div>
 
       <div class="row" style="justify-content: center; margin-top: var(--space-5)">
-        <app-pagination [page]="page()" [totalPages]="totalPages()" (pageChange)="goToPage($event)" />
+        <app-pagination
+          [page]="page()"
+          [totalPages]="totalPages()"
+          (pageChange)="goToPage($event)"
+        />
       </div>
     }
 
     @if (replyOpen()) {
-      <app-modal [open]="true" title="پاسخ به پیام" (closed)="replyOpen.set(false)">
+      <app-modal [open]="true" title="پاسخ به پیام" (closed)="closeReply()">
         <div class="stack-lg">
+          <div class="reply-recipient">
+            <span class="reply-recipient-label">گیرنده:</span>
+            <strong dir="ltr">{{ replyingTo()?.email }}</strong>
+            @if (mailStatus()?.ready) {
+              <span class="text-xs text-faint">
+                ارسال از <span dir="ltr">{{ mailStatus()?.adminEmail }}</span>
+              </span>
+            }
+          </div>
+
           <div class="text-sm">
             <strong>{{ replyingTo()?.name }}</strong>
             <p class="text-muted" style="margin-top: var(--space-1)">{{ replyingTo()?.body }}</p>
           </div>
 
+          @if (mailStatus() && !mailStatus()?.ready) {
+            <div class="notice notice-warning">
+              <app-icon name="warning" [size]="18" />
+              <div>
+                <strong>ایمیل ارسال نمیشود.</strong>
+                <p class="text-sm">
+                  اطلاعات ایمیل مدیر فروشگاه یا سرور SMTP تنظیم نشده است؛ پاسخ فقط در پنل ذخیره
+                  میشود.
+                </p>
+              </div>
+              <a class="btn btn-primary btn-sm" routerLink="/admin/settings">تنظیمات ایمیل</a>
+            </div>
+          }
+
           <div class="field">
             <label class="label">متن پاسخ</label>
             <textarea class="textarea" rows="6" [(ngModel)]="replyText" name="replyText"></textarea>
+            <p class="field-hint">
+              این متن از ایمیل مدیر فروشگاه برای «{{ replyingTo()?.name }}» ارسال میشود.
+            </p>
           </div>
         </div>
 
         <div modalFooter>
-          <button type="button" class="btn btn-ghost" (click)="replyOpen.set(false)">انصراف</button>
-          <button type="button" class="btn btn-primary" (click)="submitReply()" [disabled]="replyBusy()">
+          <button type="button" class="btn btn-ghost" (click)="closeReply()">انصراف</button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="submitReply()"
+            [disabled]="replyBusy() || !replyText.trim()"
+          >
             @if (replyBusy()) {
               <span class="spinner spinner-sm"></span>
+            } @else {
+              <app-icon name="send" [size]="16" />
             }
-            ارسال پاسخ
+            {{ mailStatus()?.ready ? 'ارسال پاسخ با ایمیل' : 'ثبت پاسخ' }}
           </button>
         </div>
       </app-modal>
@@ -169,6 +275,60 @@ const STATUS_TABS = [
       (confirm)="performDelete()"
       (cancel)="confirmOpen.set(false)"
     />
+  `,
+  styles: `
+    .notice {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      margin-bottom: var(--space-4);
+    }
+
+    .notice .btn {
+      margin-inline-start: auto;
+      flex: none;
+    }
+
+    .notice p {
+      margin: var(--space-1) 0 0;
+    }
+
+    .notice-warning {
+      background: var(--warning-soft);
+      border-color: var(--warning);
+      color: var(--text-strong);
+    }
+
+    .notice-info {
+      background: var(--info-soft);
+      border-color: var(--info);
+      color: var(--text-strong);
+    }
+
+    .reply-recipient {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-3);
+      border-radius: var(--radius-sm);
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    .reply-recipient-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .field-hint {
+      margin: 0.375rem 0 0;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
   `,
 })
 export class MessagesPage {
@@ -187,6 +347,8 @@ export class MessagesPage {
   protected readonly status = signal('unread');
   protected readonly searchTerm = signal('');
 
+  protected readonly mailStatus = signal<MailStatus | null>(null);
+
   protected readonly replyOpen = signal(false);
   protected readonly replyBusy = signal(false);
   protected readonly replyingTo = signal<ContactMessage | null>(null);
@@ -198,6 +360,7 @@ export class MessagesPage {
 
   constructor() {
     this.seo.set({ title: 'پیام‌های تماس | پنل مدیریت' });
+    this.loadMailStatus();
     this.load();
   }
 
@@ -233,17 +396,24 @@ export class MessagesPage {
     this.replyOpen.set(true);
   }
 
+  protected closeReply(): void {
+    if (this.replyBusy()) return;
+    this.replyOpen.set(false);
+  }
+
   protected submitReply(): void {
     const message = this.replyingTo();
-    if (!message || !this.replyText.trim()) return;
+    const text = this.replyText.trim();
+    if (!message || !text) return;
 
     this.replyBusy.set(true);
-    this.adminService.updateMessage(message._id, { reply: this.replyText.trim(), status: 'replied' }).subscribe({
-      next: (updated) => {
+    this.adminService.replyToMessage(message._id, text).subscribe({
+      next: (result) => {
         this.replyBusy.set(false);
         this.replyOpen.set(false);
-        this.toast.success('پاسخ ثبت شد');
-        this.patchMessage(updated);
+        this.toast.success(result.message || 'پاسخ ارسال شد');
+        this.patchMessage(result.data);
+        if (this.status() === 'unread' || this.status() === 'read') this.load();
       },
       error: (error: Error) => {
         this.replyBusy.set(false);
@@ -314,5 +484,12 @@ export class MessagesPage {
 
   private patchMessage(updated: ContactMessage): void {
     this.messages.update((list) => list.map((item) => (item._id === updated._id ? updated : item)));
+  }
+
+  private loadMailStatus(): void {
+    this.adminService.mailStatus().subscribe({
+      next: (status) => this.mailStatus.set(status),
+      error: () => this.mailStatus.set(null),
+    });
   }
 }

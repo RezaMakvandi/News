@@ -65,7 +65,10 @@ export class ApiService {
   /** POST where the success message itself matters (newsletter, contact form). */
   postWithMessage<T>(path: string, body: unknown = {}): Observable<{ data: T; message: string }> {
     return this.http.post<ApiEnvelope<T>>(this.url(path), body).pipe(
-      map((response) => ({ data: unwrap(response), message: response.message ?? 'عملیات با موفقیت انجام شد' })),
+      map((response) => ({
+        data: unwrap(response),
+        message: response.message ?? 'عملیات با موفقیت انجام شد',
+      })),
       catchError(this.handleError),
     );
   }
@@ -74,6 +77,17 @@ export class ApiService {
     return this.http
       .put<ApiEnvelope<T>>(this.url(path), body, { params: buildParams(options.params) })
       .pipe(map(unwrap), catchError(this.handleError));
+  }
+
+  /** PUT where the success message itself matters (e.g. reply sent by email). */
+  putWithMessage<T>(path: string, body: unknown = {}): Observable<{ data: T; message: string }> {
+    return this.http.put<ApiEnvelope<T>>(this.url(path), body).pipe(
+      map((response) => ({
+        data: unwrap(response),
+        message: response.message ?? 'عملیات با موفقیت انجام شد',
+      })),
+      catchError(this.handleError),
+    );
   }
 
   patch<T>(path: string, body: unknown = {}, options: RequestOptions = {}): Observable<T> {
@@ -110,7 +124,8 @@ export class ApiService {
 
       let message = body?.message ?? details;
       if (!message) {
-        if (error.status === 0) message = 'ارتباط با سرور برقرار نشد. اتصال اینترنت یا سرور را بررسی کنید.';
+        if (error.status === 0)
+          message = 'ارتباط با سرور برقرار نشد. اتصال اینترنت یا سرور را بررسی کنید.';
         else if (error.status === 401) message = 'برای انجام این عملیات باید وارد حساب خود شوید.';
         else if (error.status === 403) message = 'شما به این بخش دسترسی ندارید.';
         else if (error.status === 404) message = 'موردی که درخواست کردید یافت نشد.';

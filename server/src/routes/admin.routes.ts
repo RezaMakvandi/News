@@ -478,6 +478,22 @@ router.delete(
   settings.removeMessage,
 );
 
+/* --------------------------------- Mail -------------------------------- */
+router.get(
+  "/mail/status",
+  requireRole(
+    ...ADMIN_ROLES,
+  ),
+  settings.getMailStatus,
+);
+router.post(
+  "/mail/test",
+  requireRole(
+    ...ADMIN_ROLES,
+  ),
+  settings.testMail,
+);
+
 /* -------------------------------- Stats -------------------------------- */
 router.get(
   "/stats/overview",

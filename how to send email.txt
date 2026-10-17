@@ -1,0 +1,2 @@
+enable 2 step verification
+go to https://myaccount.google.com/apppasswords and create a 16 digits password and enter it to رمز عبور SMTP

@@ -20,6 +20,13 @@ import {
   slugify,
 } from "../utils/helpers.js";
 import { sendSuccess } from "../utils/respond.js";
+import { logger } from "../utils/logger.js";
+import {
+  buildReplyHtml,
+  getMailStatus as readMailStatus,
+  sendMail,
+  verifyMail,
+} from "../services/mail.service.js";
 
 export const DEFAULT_SETTINGS: Record<
   string,
@@ -331,6 +338,68 @@ export const DEFAULT_SETTINGS: Record<
         "appearance",
       label:
         "چیدمان صفحه اصلی",
+    },
+  /* ------------------------------ Mail ------------------------------- */
+  adminEmail:
+    {
+      value:
+        "",
+      group:
+        "mail",
+      label:
+        "ایمیل مدیر فروشگاه",
+    },
+  mailFromName:
+    {
+      value:
+        "",
+      group:
+        "mail",
+      label:
+        "نام فرستنده ایمیل",
+    },
+  smtpHost:
+    {
+      value:
+        "",
+      group:
+        "mail",
+      label:
+        "سرور SMTP",
+    },
+  smtpPort:
+    {
+      value: 587,
+      group:
+        "mail",
+      label:
+        "پورت SMTP",
+    },
+  smtpSecure:
+    {
+      value: false,
+      group:
+        "mail",
+      label:
+        "اتصال امن (SSL/TLS)",
+    },
+  smtpUser:
+    {
+      value:
+        "",
+      group:
+        "mail",
+      label:
+        "نام کاربری SMTP",
+    },
+  smtpPass:
+    {
+      value:
+        "",
+      group:
+        "mail",
+      label:
+        "رمز عبور SMTP",
     },
 };
 
@@ -1369,6 +1438,75 @@ export const updateMessage =
           new Date();
       }
 
+      const existing =
+        await Message.findById(
+          req
+            .params
+            .id,
+        );
+      if (
+        !existing
+      )
+        throw ApiError.notFound(
+          "پیام یافت نشد",
+        );
+
+      // Only email the sender when a *new* reply is written — re-saving an
+      // existing reply or changing the status must not spam the sender.
+      const cleanReply =
+        String(
+          reply ??
+            "",
+        ).trim();
+      const shouldSendMail =
+        reply !==
+          undefined &&
+        Boolean(
+          cleanReply,
+        ) &&
+        cleanReply !==
+          String(
+            existing.reply ??
+              "",
+          ).trim();
+
+      let mailSent = false;
+      let mailError:
+        | string
+        | undefined;
+
+      if (
+        shouldSendMail
+      ) {
+        try {
+          await sendMail(
+            {
+              to: existing.email,
+              subject: `پاسخ به پیام شما: ${existing.subject}`,
+              text: `${existing.name} عزیز،\n\n${cleanReply}\n\n---\nپیام ارسالی شما:\n${existing.body}`,
+              html: buildReplyHtml(
+                {
+                  name: existing.name,
+                  body: existing.body,
+                },
+                cleanReply,
+              ),
+            },
+          );
+          mailSent = true;
+        } catch (error) {
+          mailError =
+            error instanceof
+            Error
+              ? error.message
+              : "ارسال ایمیل ناموفق بود";
+          logger.error(
+            "reply mail failed:",
+            error,
+          );
+        }
+      }
+
       const message =
         await Message.findByIdAndUpdate(
           req
@@ -1393,7 +1531,11 @@ export const updateMessage =
         message,
         {
           message:
-            "پیام به‌روزرسانی شد",
+            mailSent
+              ? "پاسخ ثبت و ایمیل ارسال شد"
+              : mailError
+                ? `پاسخ ثبت شد اما ایمیل ارسال نشد: ${mailError}`
+                : "پیام به‌روزرسانی شد",
         },
       );
     },
@@ -1434,6 +1576,73 @@ export const removeMessage =
         {
           message:
             "پیام حذف شد",
+        },
+      );
+    },
+  );
+
+/* --------------------------------- Mail -------------------------------- */
+
+/** GET /api/admin/mail/status — SMTP configuration summary for the admin UI. */
+export const getMailStatus =
+  asyncHandler(
+    async (
+      _req: AuthRequest,
+      res: Response,
+    ) => {
+      const status =
+        await readMailStatus();
+      return sendSuccess(
+        res,
+        status,
+      );
+    },
+  );
+
+/** POST /api/admin/mail/test — sends a test email to verify the SMTP setup. */
+export const testMail =
+  asyncHandler(
+    async (
+      req: AuthRequest,
+      res: Response,
+    ) => {
+      const {
+        email,
+      } =
+        (req.body ??
+          {}) as {
+          email?: string;
+        };
+      const to =
+        String(
+          email ??
+            "",
+        ).trim() ||
+        undefined;
+
+      try {
+        await verifyMail(
+          to,
+        );
+      } catch (error) {
+        logger.error(
+          "mail test failed:",
+          error,
+        );
+        throw ApiError.badRequest(
+          error instanceof
+            Error
+            ? error.message
+            : "ارسال ایمیل آزمایشی ناموفق بود",
+        );
+      }
+
+      return sendSuccess(
+        res,
+        null,
+        {
+          message:
+            "ایمیل آزمایشی ارسال شد",
         },
       );
     },

@@ -6,7 +6,8 @@ export type SettingGroup =
   | 'content'
   | 'appearance'
   | 'shop'
-  | 'payment';
+  | 'payment'
+  | 'mail';
 
 export interface SettingItem {
   key: string;
@@ -31,6 +32,13 @@ export interface PublicSettings {
   socialTelegram?: string;
   socialYoutube?: string;
   socialLinkedin?: string;
+  /** Mailbox replies to contact messages are sent from. */
+  adminEmail?: string;
+  mailFromName?: string;
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpSecure?: boolean;
+  smtpUser?: string;
   seoTitle?: string;
   seoKeywords?: string[];
   footerText?: string;
@@ -59,6 +67,7 @@ export const SETTING_GROUP_LABELS: Record<SettingGroup, string> = {
   appearance: 'ظاهر و قالب',
   shop: 'فروشگاه',
   payment: 'درگاه پرداخت زرین‌پال',
+  mail: 'ایمیل و پاسخ به پیامها',
 };
 
 export const SETTING_GROUP_ORDER: SettingGroup[] = [
@@ -70,6 +79,7 @@ export const SETTING_GROUP_ORDER: SettingGroup[] = [
   'footer',
   'shop',
   'payment',
+  'mail',
 ];
 
 /** Keys rendered as toggles rather than text inputs. */
@@ -80,10 +90,14 @@ export const SETTING_BOOLEAN_KEYS = new Set([
   'shopEnabled',
   'codEnabled',
   'zarinpalSandbox',
+  'smtpSecure',
 ]);
 
 /** Keys that hold a colour value. */
 export const SETTING_COLOR_KEYS = new Set(['accentColor']);
+
+/** Keys rendered as password inputs (values are masked, never echoed back). */
+export const SETTING_SECRET_KEYS = new Set(['smtpPass']);
 
 /** Keys edited by a dedicated screen, hidden from the generic settings form. */
 export const SETTING_MANAGED_KEYS = new Set(['homeLayout']);
