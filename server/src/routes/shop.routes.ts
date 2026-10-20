@@ -8,6 +8,7 @@ import {
   attachUser,
   requireAuth,
 } from "../middleware/auth.js";
+import { requireShopEnabled } from "../middleware/shopEnabled.js";
 import { publicWriteLimiter } from "../middleware/rateLimit.js";
 import {
   isNonEmpty,
@@ -21,6 +22,11 @@ const router =
 
 router.use(
   attachUser,
+);
+
+/** Every storefront endpoint answers 403 while the shop is disabled. */
+router.use(
+  requireShopEnabled,
 );
 
 /* ------------------------------- Catalog ------------------------------- */

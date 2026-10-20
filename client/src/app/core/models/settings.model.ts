@@ -46,6 +46,8 @@ export interface PublicSettings {
   commentsModeration?: boolean;
   postsPerPage?: number;
   breakingEnabled?: boolean;
+  /** Master switch for the storefront; hides all shop surfaces when false. */
+  shopEnabled?: boolean;
   themeDefault?: 'light' | 'dark';
   accentColor?: string;
   /** Ordered home page blocks (see `home-layout.model`). */

@@ -227,9 +227,14 @@ export class AdminLayoutComponent {
   /** Hide nav groups whose every item is gated above the current role. */
   protected readonly visibleNav = computed(() => {
     const role = this.auth.role() ?? 'subscriber';
+    const shopOn = this.settings.shopEnabled();
     return NAV.map((group) => ({
       ...group,
-      items: group.items.filter((item) => !item.roles || item.roles.includes(role)),
+      items: group.items.filter(
+        (item) =>
+          (!item.roles || item.roles.includes(role)) &&
+          (shopOn || !item.path.startsWith('/admin/shop')),
+      ),
     })).filter((group) => group.items.length > 0);
   });
 

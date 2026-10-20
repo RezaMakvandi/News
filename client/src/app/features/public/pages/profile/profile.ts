@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../../../shared/components/icon/icon';
 import { AuthService } from '../../../../core/services/auth.service';
+import { SettingsService } from '../../../../core/services/settings.service';
 import { SeoService } from '../../../../core/services/seo.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { USER_ROLE_LABELS } from '../../../../core/models/user.model';
@@ -44,18 +45,20 @@ import { USER_ROLE_LABELS } from '../../../../core/models/user.model';
               <app-icon name="user" [size]="16" />
               اطلاعات حساب
             </a>
-            <a class="profile-nav-item" routerLink="/shop/orders">
-              <app-icon name="bag" [size]="16" />
-              سفارشهای من
-            </a>
-            <a class="profile-nav-item" routerLink="/shop/wishlist">
-              <app-icon name="heart" [size]="16" />
-              علاقهمندیها
-            </a>
-            <a class="profile-nav-item" routerLink="/shop/compare">
-              <app-icon name="scale" [size]="16" />
-              مقایسه محصولات
-            </a>
+            @if (shopEnabled()) {
+              <a class="profile-nav-item" routerLink="/shop/orders">
+                <app-icon name="bag" [size]="16" />
+                سفارشهای من
+              </a>
+              <a class="profile-nav-item" routerLink="/shop/wishlist">
+                <app-icon name="heart" [size]="16" />
+                علاقهمندیها
+              </a>
+              <a class="profile-nav-item" routerLink="/shop/compare">
+                <app-icon name="scale" [size]="16" />
+                مقایسه محصولات
+              </a>
+            }
             <a class="profile-nav-item" routerLink="/profile/password">
               <app-icon name="lock" [size]="16" />
               تغییر گذرواژه
@@ -253,6 +256,9 @@ export class ProfilePage {
   protected readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
   private readonly seo = inject(SeoService);
+  protected readonly settings = inject(SettingsService);
+
+  protected readonly shopEnabled = this.settings.shopEnabled;
 
   protected name = '';
   protected avatar = '';

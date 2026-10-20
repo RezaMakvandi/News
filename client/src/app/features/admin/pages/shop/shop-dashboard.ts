@@ -5,6 +5,7 @@ import { IconComponent } from '../../../../shared/components/icon/icon';
 import { SpinnerComponent } from '../../../../shared/components/spinner/spinner';
 import { OrderService } from '../../../../core/services/order.service';
 import { SeoService } from '../../../../core/services/seo.service';
+import { SettingsService } from '../../../../core/services/settings.service';
 import { FaNumberPipe } from '../../../../shared/pipes/format.pipe';
 import type { ShopStatsCharts, ShopStatsOverview } from '../../../../core/models/order.model';
 
@@ -22,6 +23,21 @@ import type { ShopStatsCharts, ShopStatsOverview } from '../../../../core/models
         <app-icon name="globe" [size]="16" /> مشاهده فروشگاه
       </a>
     </div>
+
+    @if (!settings.shopEnabled()) {
+      <div class="card card-pad" style="margin-bottom: var(--space-5)">
+        <div class="row" style="align-items:center; gap: var(--space-3)">
+          <app-icon name="info" [size]="20" />
+          <div class="grow">
+            <strong>فروشگاه غیرفعال است.</strong>
+            <p class="text-sm text-muted" style="margin:0">
+              فروشگاه برای بازدیدکنندگان نمایش داده نمیشود؛ از
+              <a routerLink="/admin/settings">تنظیمات</a> میتوانید آن را فعال کنید.
+            </p>
+          </div>
+        </div>
+      </div>
+    }
 
     @if (loading()) {
       <app-spinner label="در حال بارگذاری آمار فروشگاه..." />
@@ -208,6 +224,7 @@ import type { ShopStatsCharts, ShopStatsOverview } from '../../../../core/models
 export class ShopDashboardPage {
   private readonly orderService = inject(OrderService);
   private readonly seo = inject(SeoService);
+  protected readonly settings = inject(SettingsService);
 
   protected readonly overview = signal<ShopStatsOverview | null>(null);
   protected readonly charts = signal<ShopStatsCharts | null>(null);

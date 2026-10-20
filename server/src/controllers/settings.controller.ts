@@ -1,5 +1,6 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/auth.js";
+import { invalidateShopEnabledCache } from "../middleware/shopEnabled.js";
 import { Page } from "../models/Page.js";
 import { Setting } from "../models/Setting.js";
 import { Subscriber } from "../models/Subscriber.js";
@@ -631,6 +632,18 @@ export const updateMany =
           }),
         ),
       );
+
+      if (
+        items.some(
+          (
+            item,
+          ) =>
+            item.key ===
+            "shopEnabled",
+        )
+      ) {
+        invalidateShopEnabledCache();
+      }
 
       const settings =
         await Setting.find().lean();

@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { SettingsService } from '../services/settings.service';
 import { ToastService } from '../services/toast.service';
 
 /** Blocks anonymous visitors from admin routes and remembers the target URL. */
@@ -68,4 +69,33 @@ export const userGuard: CanActivateFn = (_route, state) => {
 
   toast.warning('برای دسترسی به این بخش باید وارد شوید.');
   return router.createUrlTree(['/login'], { queryParams: { redirect: state.url } });
+};
+
+/**
+ * Blocks the public storefront (`/shop/**`) while the shop is disabled in the
+ * admin settings. Staff may still pass through to verify their changes.
+ */
+export const shopEnabledGuard: CanActivateFn = () => {
+  const settings = inject(SettingsService);
+  const router = inject(Router);
+  const toast = inject(ToastService);
+  const auth = inject(AuthService);
+
+  if (settings.shopEnabled() || auth.isStaff()) return true;
+
+  toast.info('فروشگاه در حال حاضر غیرفعال است.');
+  return router.createUrlTree(['/']);
+};
+
+/** Gates admin shop pages; admins keep access so they can re-enable the shop. */
+export const adminShopEnabledGuard: CanActivateFn = () => {
+  const settings = inject(SettingsService);
+  const router = inject(Router);
+  const toast = inject(ToastService);
+  const auth = inject(AuthService);
+
+  if (settings.shopEnabled() || auth.isAdmin()) return true;
+
+  toast.info('فروشگاه غیرفعال است. برای فعال‌سازی به تنظیمات بروید.');
+  return router.createUrlTree(['/admin/settings']);
 };

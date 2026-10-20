@@ -42,7 +42,9 @@ import { USER_ROLE_LABELS } from '../../../core/models/user.model';
           >
             صفحه اصلی
           </a>
-          <a routerLink="/shop" routerLinkActive="is-active">فروشگاه</a>
+          @if (shopEnabled()) {
+            <a routerLink="/shop" routerLinkActive="is-active">فروشگاه</a>
+          }
           @for (category of categories(); track category._id) {
             <a [routerLink]="['/category', category.slug]" routerLinkActive="is-active">
               {{ category.name }}
@@ -51,17 +53,19 @@ import { USER_ROLE_LABELS } from '../../../core/models/user.model';
         </nav>
 
         <div class="header-actions">
-          <a
-            class="btn btn-icon shop-nav-link"
-            routerLink="/shop/cart"
-            aria-label="سبد خرید"
-            title="سبد خرید"
-          >
-            <app-icon name="cart" />
-            @if (cartCount() > 0) {
-              <span class="cart-badge">{{ cartCount() | faNumber }}</span>
-            }
-          </a>
+          @if (shopEnabled()) {
+            <a
+              class="btn btn-icon shop-nav-link"
+              routerLink="/shop/cart"
+              aria-label="سبد خرید"
+              title="سبد خرید"
+            >
+              <app-icon name="cart" />
+              @if (cartCount() > 0) {
+                <span class="cart-badge">{{ cartCount() | faNumber }}</span>
+              }
+            </a>
+          }
 
           <button
             type="button"
@@ -121,33 +125,35 @@ import { USER_ROLE_LABELS } from '../../../core/models/user.model';
                     <app-icon name="user" [size]="16" />
                     حساب کاربری من
                   </a>
-                  <a
-                    class="dropdown-item"
-                    role="menuitem"
-                    routerLink="/shop/orders"
-                    (click)="closeProfile()"
-                  >
-                    <app-icon name="bag" [size]="16" />
-                    سفارشهای من
-                  </a>
-                  <a
-                    class="dropdown-item"
-                    role="menuitem"
-                    routerLink="/shop/wishlist"
-                    (click)="closeProfile()"
-                  >
-                    <app-icon name="heart" [size]="16" />
-                    علاقهمندیها
-                  </a>
-                  <a
-                    class="dropdown-item"
-                    role="menuitem"
-                    routerLink="/shop/compare"
-                    (click)="closeProfile()"
-                  >
-                    <app-icon name="scale" [size]="16" />
-                    مقایسه محصولات
-                  </a>
+                  @if (shopEnabled()) {
+                    <a
+                      class="dropdown-item"
+                      role="menuitem"
+                      routerLink="/shop/orders"
+                      (click)="closeProfile()"
+                    >
+                      <app-icon name="bag" [size]="16" />
+                      سفارشهای من
+                    </a>
+                    <a
+                      class="dropdown-item"
+                      role="menuitem"
+                      routerLink="/shop/wishlist"
+                      (click)="closeProfile()"
+                    >
+                      <app-icon name="heart" [size]="16" />
+                      علاقهمندیها
+                    </a>
+                    <a
+                      class="dropdown-item"
+                      role="menuitem"
+                      routerLink="/shop/compare"
+                      (click)="closeProfile()"
+                    >
+                      <app-icon name="scale" [size]="16" />
+                      مقایسه محصولات
+                    </a>
+                  }
                   @if (auth.isStaff()) {
                     <a
                       class="dropdown-item"
@@ -234,13 +240,15 @@ import { USER_ROLE_LABELS } from '../../../core/models/user.model';
               {{ category.name }}
             </a>
           }
-          <a routerLink="/shop" routerLinkActive="is-active" (click)="closeMobile()">فروشگاه</a>
-          <a routerLink="/shop/wishlist" routerLinkActive="is-active" (click)="closeMobile()"
-            >علاقهمندیها</a
-          >
-          <a routerLink="/shop/orders" routerLinkActive="is-active" (click)="closeMobile()"
-            >سفارشهای من</a
-          >
+          @if (shopEnabled()) {
+            <a routerLink="/shop" routerLinkActive="is-active" (click)="closeMobile()">فروشگاه</a>
+            <a routerLink="/shop/wishlist" routerLinkActive="is-active" (click)="closeMobile()"
+              >علاقهمندیها</a
+            >
+            <a routerLink="/shop/orders" routerLinkActive="is-active" (click)="closeMobile()"
+              >سفارشهای من</a
+            >
+          }
           <a routerLink="/contact" routerLinkActive="is-active" (click)="closeMobile()"
             >تماس با ما</a
           >
@@ -432,6 +440,9 @@ export class SiteHeaderComponent {
     () => (this.settings.settings()['siteTagline'] as string) || 'رسانه فناوری',
   );
   protected readonly siteInitial = computed(() => this.siteName().charAt(0));
+
+  /** Master shop switch from site settings; hides shop links when off. */
+  protected readonly shopEnabled = this.settings.shopEnabled;
 
   /** Live cart badge — server count when signed in, local count otherwise. */
   protected readonly cartCount = computed(() => {

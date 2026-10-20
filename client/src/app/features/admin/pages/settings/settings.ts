@@ -242,7 +242,16 @@ export class SettingsPage {
   }
 
   protected itemsByGroup(group: SettingGroup): SettingRow[] {
-    return this.items().filter((item) => item.group === group);
+    const rows = this.items().filter((item) => item.group === group);
+    if (group === 'shop') {
+      // The master switch leads the shop card.
+      const index = rows.findIndex((item) => item.key === 'shopEnabled');
+      if (index > 0) {
+        const [switchRow] = rows.splice(index, 1);
+        rows.unshift(switchRow);
+      }
+    }
+    return rows;
   }
 
   protected groupLabel(group: SettingGroup): string {
@@ -285,6 +294,8 @@ export class SettingsPage {
   /** Hint shown under a setting, if any. */
   protected hintFor(key: string): string {
     switch (key) {
+      case 'shopEnabled':
+        return 'با غیرفعال کردن، منوی فروشگاه و همه بخشهای فروشگاه در سایت پنهان میشود و مسیرهای آن در دسترس نخواهد بود. مدیران همچنان از پنل به صفحات فروشگاه دسترسی دارند.';
       case 'zarinpalMerchantId':
         return 'شناسه ۳۶ کاراکتری دریافتی از پنل زرین‌پال (UUID). خالی بودن در حالت تست از مرچنت پیش‌فرض سندباکس استفاده می‌کند.';
       case 'zarinpalSandbox':

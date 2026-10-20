@@ -33,6 +33,9 @@ export class SettingsService {
     return configured.length ? configured : HOME_LAYOUT_DEFAULT;
   });
 
+  /** Master shop switch — surfaces may render only while this is true. */
+  readonly shopEnabled = computed(() => this.settingsSignal()['shopEnabled'] !== false);
+
   /**
    * GET /api/settings — cached in a signal for header/footer rendering.
    * Concurrent callers share one request; pass `forceReload` to refresh.

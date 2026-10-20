@@ -418,9 +418,19 @@ export class HomePage {
   protected readonly layout = this.settings.homeLayout;
 
   /** Enabled sections grouped into side-by-side rows (12-column grid). */
-  protected readonly rows = computed(() =>
-    layoutRows(this.layout().filter((section) => section.enabled !== false)),
-  );
+  protected readonly rows = computed(() => {
+    const shopOn = this.settings.shopEnabled();
+    return layoutRows(
+      this.layout().filter(
+        (section) =>
+          section.enabled !== false &&
+          (shopOn ||
+            (section.type !== 'products' &&
+              section.type !== 'product_categories' &&
+              section.type !== 'shop_banner')),
+      ),
+    );
+  });
 
   protected readonly loading = signal(true);
   protected readonly ready = signal(false);
@@ -577,6 +587,7 @@ export class HomePage {
 
   /** Fetches the data required by the current layout, skipping loaded queries. */
   private ensureData(layout: HomeSection[]): void {
+    const shopOn = this.settings.shopEnabled();
     const enabled = layout.filter((section) => section.enabled !== false);
     let wantsHeadlines = false;
     let wantsCategories = false;
@@ -608,10 +619,10 @@ export class HomePage {
           track('tags', this.clampLimit(section.limit, 14));
           break;
         case 'product_categories':
-          track('productCategories', this.clampLimit(section.limit, 8));
+          if (shopOn) track('productCategories', this.clampLimit(section.limit, 8));
           break;
         case 'products':
-          track(this.productKey(section), limit);
+          if (shopOn) track(this.productKey(section), limit);
           break;
       }
     }

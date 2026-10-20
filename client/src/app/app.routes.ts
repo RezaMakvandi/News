@@ -1,8 +1,10 @@
 import { Routes } from '@angular/router';
 import {
   adminGuard,
+  adminShopEnabledGuard,
   authGuard,
   guestGuard,
+  shopEnabledGuard,
   staffGuard,
   userGuard,
 } from './core/guards/auth.guard';
@@ -127,31 +129,35 @@ export const routes: Routes = [
       },
       {
         path: 'shop',
+        canActivate: [adminShopEnabledGuard],
         loadComponent: () =>
           import('./features/admin/pages/shop/shop-dashboard').then((m) => m.ShopDashboardPage),
         title: 'داشبورد فروشگاه | پنل مدیریت',
       },
       {
         path: 'shop/products',
+        canActivate: [adminShopEnabledGuard],
         loadComponent: () =>
           import('./features/admin/pages/shop/products').then((m) => m.AdminProductsPage),
         title: 'محصولات | پنل مدیریت',
       },
       {
         path: 'shop/products/new',
+        canActivate: [adminShopEnabledGuard],
         loadComponent: () =>
           import('./features/admin/pages/shop/product-editor').then((m) => m.ProductEditorPage),
         title: 'محصول جدید | پنل مدیریت',
       },
       {
         path: 'shop/products/:id/edit',
+        canActivate: [adminShopEnabledGuard],
         loadComponent: () =>
           import('./features/admin/pages/shop/product-editor').then((m) => m.ProductEditorPage),
         title: 'ویرایش محصول | پنل مدیریت',
       },
       {
         path: 'shop/categories',
-        canActivate: [adminGuard],
+        canActivate: [adminGuard, adminShopEnabledGuard],
         loadComponent: () =>
           import('./features/admin/pages/shop/product-categories').then(
             (m) => m.AdminProductCategoriesPage,
@@ -160,38 +166,42 @@ export const routes: Routes = [
       },
       {
         path: 'shop/brands',
-        canActivate: [adminGuard],
+        canActivate: [adminGuard, adminShopEnabledGuard],
         loadComponent: () =>
           import('./features/admin/pages/shop/brands').then((m) => m.AdminBrandsPage),
         title: 'برندها | پنل مدیریت',
       },
       {
         path: 'shop/inventory',
+        canActivate: [adminShopEnabledGuard],
         loadComponent: () =>
           import('./features/admin/pages/shop/inventory').then((m) => m.AdminInventoryPage),
         title: 'انبار | پنل مدیریت',
       },
       {
         path: 'shop/orders',
+        canActivate: [adminShopEnabledGuard],
         loadComponent: () =>
           import('./features/admin/pages/shop/orders').then((m) => m.AdminOrdersPage),
         title: 'سفارشها | پنل مدیریت',
       },
       {
         path: 'shop/orders/:id',
+        canActivate: [adminShopEnabledGuard],
         loadComponent: () =>
           import('./features/admin/pages/shop/order-detail').then((m) => m.AdminOrderDetailPage),
         title: 'جزئیات سفارش | پنل مدیریت',
       },
       {
         path: 'shop/coupons',
-        canActivate: [adminGuard],
+        canActivate: [adminGuard, adminShopEnabledGuard],
         loadComponent: () =>
           import('./features/admin/pages/shop/coupons').then((m) => m.AdminCouponsPage),
         title: 'کدهای تخفیف | پنل مدیریت',
       },
       {
         path: 'shop/reviews',
+        canActivate: [adminShopEnabledGuard],
         loadComponent: () =>
           import('./features/admin/pages/shop/reviews').then((m) => m.AdminReviewsPage),
         title: 'نظرات محصولات | پنل مدیریت',
@@ -257,58 +267,68 @@ export const routes: Routes = [
       },
       {
         path: 'shop',
+        canActivate: [shopEnabledGuard],
         loadComponent: () =>
           import('./features/public/pages/shop/shop-home').then((m) => m.ShopHomePage),
         title: 'فروشگاه کالای دیجیتال',
       },
       {
         path: 'shop/products',
+        canActivate: [shopEnabledGuard],
         loadComponent: () =>
           import('./features/public/pages/shop/product-list').then((m) => m.ProductListPage),
         title: 'محصولات | فروشگاه',
       },
       {
         path: 'shop/product/:slug',
+        canActivate: [shopEnabledGuard],
         loadComponent: () =>
           import('./features/public/pages/shop/product-detail').then((m) => m.ProductDetailPage),
       },
       {
         path: 'shop/cart',
+        canActivate: [shopEnabledGuard],
         loadComponent: () => import('./features/public/pages/shop/cart').then((m) => m.CartPage),
         title: 'سبد خرید | فروشگاه',
       },
       {
         path: 'shop/checkout',
+        canActivate: [shopEnabledGuard],
         loadComponent: () =>
           import('./features/public/pages/shop/checkout').then((m) => m.CheckoutPage),
         title: 'تسویه حساب | فروشگاه',
       },
       {
         path: 'shop/payment-result',
+        canActivate: [shopEnabledGuard],
         loadComponent: () =>
           import('./features/public/pages/shop/payment-result').then((m) => m.PaymentResultPage),
         title: 'نتیجه پرداخت | فروشگاه',
       },
       {
         path: 'shop/orders',
+        canActivate: [shopEnabledGuard],
         loadComponent: () =>
           import('./features/public/pages/shop/my-orders').then((m) => m.MyOrdersPage),
         title: 'سفارشهای من | فروشگاه',
       },
       {
         path: 'shop/orders/:id',
+        canActivate: [shopEnabledGuard],
         loadComponent: () =>
           import('./features/public/pages/shop/order-detail').then((m) => m.OrderDetailPage),
         title: 'جزئیات سفارش | فروشگاه',
       },
       {
         path: 'shop/wishlist',
+        canActivate: [shopEnabledGuard],
         loadComponent: () =>
           import('./features/public/pages/shop/wishlist').then((m) => m.WishlistPage),
         title: 'علاقه مندیها | فروشگاه',
       },
       {
         path: 'shop/compare',
+        canActivate: [shopEnabledGuard],
         loadComponent: () =>
           import('./features/public/pages/shop/compare').then((m) => m.ComparePage),
         title: 'مقایسه محصولات | فروشگاه',
