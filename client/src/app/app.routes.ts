@@ -1,9 +1,15 @@
 import { Routes } from '@angular/router';
-import { adminGuard, authGuard, guestGuard, staffGuard } from './core/guards/auth.guard';
+import {
+  adminGuard,
+  authGuard,
+  guestGuard,
+  staffGuard,
+  userGuard,
+} from './core/guards/auth.guard';
 
 /**
  * Route order matters:
- *  1. `/admin/login` and `/admin` come FIRST so the public layout's `**`
+ *  1. `/admin/login`, `/login` and `/admin` come FIRST so the public layout's `**`
  *     catch-all (inside the `path: ''` route) never swallows them.
  *  2. All public routes are children of the public layout at `path: ''`,
  *     which matches any prefix and provides header/footer/ticker chrome.
@@ -13,7 +19,13 @@ export const routes: Routes = [
     path: 'admin/login',
     canActivate: [guestGuard],
     loadComponent: () => import('./features/auth/pages/login/login').then((m) => m.LoginPage),
-    title: 'ورود به پنل مدیریت | زوم‌آیتی',
+    title: 'ورود و ثبت‌نام | زوم‌آیتی',
+  },
+  {
+    path: 'login',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/auth/pages/login/login').then((m) => m.LoginPage),
+    title: 'ورود و ثبت‌نام | زوم‌آیتی',
   },
   {
     path: 'admin',
@@ -228,6 +240,20 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/public/pages/contact/contact').then((m) => m.ContactPage),
         title: 'تماس با ما | زوم‌آیتی',
+      },
+      {
+        path: 'profile',
+        canActivate: [userGuard],
+        loadComponent: () =>
+          import('./features/public/pages/profile/profile').then((m) => m.ProfilePage),
+        title: 'حساب کاربری من | زوم‌آیتی',
+      },
+      {
+        path: 'profile/password',
+        canActivate: [userGuard],
+        loadComponent: () =>
+          import('./features/public/pages/profile/password').then((m) => m.ChangePasswordPage),
+        title: 'تغییر گذرواژه | زوم‌آیتی',
       },
       {
         path: 'shop',

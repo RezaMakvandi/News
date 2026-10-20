@@ -115,6 +115,15 @@ import { USER_ROLE_LABELS } from '../../../core/models/user.model';
                   <a
                     class="dropdown-item"
                     role="menuitem"
+                    routerLink="/profile"
+                    (click)="closeProfile()"
+                  >
+                    <app-icon name="user" [size]="16" />
+                    حساب کاربری من
+                  </a>
+                  <a
+                    class="dropdown-item"
+                    role="menuitem"
                     routerLink="/shop/orders"
                     (click)="closeProfile()"
                   >
@@ -164,7 +173,7 @@ import { USER_ROLE_LABELS } from '../../../core/models/user.model';
               }
             </div>
           } @else {
-            <a class="login-link" routerLink="/admin/login" (click)="closeMobile()">
+            <a class="login-link" routerLink="/login" (click)="closeMobile()">
               <app-icon name="user" [size]="17" />
               ورود
             </a>
@@ -236,9 +245,12 @@ import { USER_ROLE_LABELS } from '../../../core/models/user.model';
             >تماس با ما</a
           >
           @if (auth.isLoggedIn()) {
-            <a routerLink="/admin" (click)="closeMobile()">پنل کاربری</a>
+            <a routerLink="/profile" (click)="closeMobile()">حساب کاربری</a>
+            @if (auth.isStaff()) {
+              <a routerLink="/admin" (click)="closeMobile()">پنل مدیریت</a>
+            }
           } @else {
-            <a routerLink="/admin/login" (click)="closeMobile()">ورود / ثبت‌نام</a>
+            <a routerLink="/login" (click)="closeMobile()">ورود / ثبت‌نام</a>
           }
         </nav>
       }

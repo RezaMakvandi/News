@@ -336,7 +336,7 @@ import {
                     </p>
                   } @else {
                     <p class="text-sm text-muted" style="margin-bottom:var(--space-3)">
-                      برای ثبت نظر ابتدا <a routerLink="/admin/login">وارد حساب</a> شوید.
+                      برای ثبت نظر ابتدا <a routerLink="/login">وارد حساب</a> شوید.
                     </p>
                   }
 

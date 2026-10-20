@@ -26,7 +26,7 @@ import type { CartTotals } from '../../../../core/models/cart.model';
           <p class="text-muted">سبد خرید به حساب کاربری شما گره خورده است.</p>
           <a
             class="btn btn-primary"
-            routerLink="/admin/login"
+            routerLink="/login"
             [queryParams]="{ redirect: '/shop/cart' }"
             >ورود / ثبت نام</a
           >

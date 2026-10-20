@@ -32,7 +32,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
             </span>
             <span class="brand-text">
               <span class="brand-name">زوم‌آیتی</span>
-              <span class="brand-tag">پنل مدیریت</span>
+              <span class="brand-tag">حساب کاربری</span>
             </span>
           </a>
           <button
@@ -45,12 +45,60 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
           </button>
         </div>
 
-        <h1 class="auth-title">ورود به حساب کاربری</h1>
-        <p class="text-sm text-muted">برای دسترسی به پنل مدیریت وارد شوید.</p>
+        <h1 class="auth-title">{{ mode() === 'login' ? 'ورود به حساب کاربری' : 'ساخت حساب کاربری' }}</h1>
+        <p class="text-sm text-muted">
+          @if (mode() === 'login') {
+            برای خرید، ثبت نظر و استفاده از امکانات سایت وارد شوید.
+          } @else {
+            حساب کاربری خود را بسازید تا خرید کنید و نظر بدهید.
+          }
+        </p>
+
+        <div class="auth-switch" role="tablist" aria-label="نوع عملیات">
+          <button
+            type="button"
+            role="tab"
+            class="auth-switch-btn"
+            [class.is-active]="mode() === 'login'"
+            [attr.aria-selected]="mode() === 'login'"
+            (click)="setMode('login')"
+          >
+            ورود
+          </button>
+          <button
+            type="button"
+            role="tab"
+            class="auth-switch-btn"
+            [class.is-active]="mode() === 'register'"
+            [attr.aria-selected]="mode() === 'register'"
+            (click)="setMode('register')"
+          >
+            ثبت‌نام
+          </button>
+        </div>
 
         <form (submit)="submit($event)" class="stack-lg">
           @if (error()) {
             <div class="badge badge-danger auth-error">{{ error() }}</div>
+          }
+
+          @if (mode() === 'register') {
+            <div class="field login_field">
+              <label class="label" for="register-name">نام و نام خانوادگی</label>
+              <input
+                id="register-name"
+                class="input"
+                type="text"
+                name="name"
+                autocomplete="name"
+                placeholder="نام خود را وارد کنید"
+                [class.is-invalid]="fieldErrors()['name']"
+                [(ngModel)]="name"
+              />
+              @if (fieldErrors()['name']) {
+                <span class="error-text">{{ fieldErrors()['name'] }}</span>
+              }
+            </div>
           }
 
           <div class="field login_field">
@@ -80,7 +128,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
                 [type]="showPassword() ? 'text' : 'password'"
                 name="password"
                 dir="ltr"
-                autocomplete="current-password"
+                [attr.autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'"
                 placeholder="••••••••"
                 [class.is-invalid]="fieldErrors()['password']"
                 [(ngModel)]="password"
@@ -96,6 +144,8 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
             </div>
             @if (fieldErrors()['password']) {
               <span class="error-text">{{ fieldErrors()['password'] }}</span>
+            } @else if (mode() === 'register') {
+              <span class="hint">گذرواژه باید حداقل ۶ کاراکتر باشد.</span>
             }
           </div>
 
@@ -103,20 +153,32 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
             @if (submitting()) {
               <span class="spinner spinner-sm"></span>
             }
-            ورود
+            {{ mode() === 'login' ? 'ورود' : 'ساخت حساب' }}
           </button>
         </form>
 
-        <div class="demo-accounts">
-          <p class="text-xs text-faint">حساب‌های نمایشی برای آزمایش سریع:</p>
-          <div class="demo-grid">
-            @for (account of demoAccounts; track account.email) {
-              <button type="button" class="chip" (click)="fill(account)">
-                {{ account.label }}
-              </button>
-            }
+        <p class="auth-alt text-sm text-muted">
+          @if (mode() === 'login') {
+            حساب کاربری ندارید؟
+            <button type="button" class="link-btn" (click)="setMode('register')">ثبت‌نام کنید</button>
+          } @else {
+            قبلاً ثبت‌نام کرده‌اید؟
+            <button type="button" class="link-btn" (click)="setMode('login')">وارد شوید</button>
+          }
+        </p>
+
+        @if (mode() === 'login') {
+          <div class="demo-accounts">
+            <p class="text-xs text-faint">حساب‌های نمایشی برای آزمایش سریع:</p>
+            <div class="demo-grid">
+              @for (account of demoAccounts; track account.email) {
+                <button type="button" class="chip" (click)="fill(account)">
+                  {{ account.label }}
+                </button>
+              }
+            </div>
           </div>
-        </div>
+        }
       </div>
     </div>
   `,
@@ -184,6 +246,68 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
       flex-wrap: wrap;
       margin-top: var(--space-2);
     }
+
+    .auth-switch {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      margin-bottom: var(--space-5);
+      background: var(--bg-subtle);
+      border-radius: var(--radius-sm);
+    }
+
+    .auth-switch-btn {
+      flex: 1;
+      padding: var(--space-2) var(--space-3);
+      border: 0;
+      border-radius: var(--radius-xs);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition:
+        background-color var(--transition-fast),
+        color var(--transition-fast);
+
+      &:hover {
+        color: var(--text);
+      }
+
+      &.is-active {
+        background: var(--surface);
+        color: var(--accent);
+        box-shadow: var(--shadow-xs);
+      }
+    }
+
+    .link-btn {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--accent);
+      font-size: inherit;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    .auth-alt {
+      margin: var(--space-4) 0 0;
+      text-align: center;
+    }
+
+    .hint {
+      display: block;
+      margin-top: var(--space-1);
+      font-size: 0.76rem;
+      color: var(--text-faint);
+    }
   `,
 })
 export class LoginPage {
@@ -195,6 +319,8 @@ export class LoginPage {
 
   protected email = '';
   protected password = '';
+  protected name = '';
+  protected readonly mode = signal<'login' | 'register'>('login');
   protected readonly submitting = signal(false);
   protected readonly showPassword = signal(false);
   protected readonly error = signal('');
@@ -202,7 +328,13 @@ export class LoginPage {
   protected readonly demoAccounts = DEMO_ACCOUNTS;
 
   constructor() {
-    this.seo.set({ title: 'ورود به پنل مدیریت' });
+    this.seo.set({ title: 'ورود و ثبت‌نام | زوم‌آیتی' });
+  }
+
+  protected setMode(mode: 'login' | 'register'): void {
+    this.mode.set(mode);
+    this.fieldErrors.set({});
+    this.error.set('');
   }
 
   protected fill(account: DemoAccount): void {
@@ -216,6 +348,9 @@ export class LoginPage {
     event.preventDefault();
 
     const errors: Record<string, string> = {};
+    if (this.mode() === 'register' && this.name.trim().length < 3) {
+      errors['name'] = 'نام باید حداقل ۳ کاراکتر باشد';
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim())) errors['email'] = 'ایمیل معتبر نیست';
     if (this.password.length < 6) errors['password'] = 'گذرواژه باید حداقل ۶ کاراکتر باشد';
     this.fieldErrors.set(errors);
@@ -224,20 +359,22 @@ export class LoginPage {
     this.submitting.set(true);
     this.error.set('');
 
-    this.auth.login(this.email.trim(), this.password).subscribe({
+    const action =
+      this.mode() === 'register'
+        ? this.auth.register(this.name.trim(), this.email.trim(), this.password)
+        : this.auth.login(this.email.trim(), this.password);
+
+    action.subscribe({
       next: () => {
         this.submitting.set(false);
-        if (this.auth.isStaff()) {
-          const redirect = this.route.snapshot.queryParamMap.get('redirect') || '/admin';
-          void this.router.navigateByUrl(redirect);
-        } else {
-          this.auth.logout(false);
-          this.error.set('این حساب دسترسی به پنل مدیریت ندارد.');
-        }
+        // Staff keep their admin destination; ordinary users return to the site.
+        const redirect = this.route.snapshot.queryParamMap.get('redirect');
+        const target = redirect && this.auth.isStaff() ? redirect : '/';
+        void this.router.navigateByUrl(target);
       },
       error: (error: Error) => {
         this.submitting.set(false);
-        this.error.set(error.message || 'ورود ناموفق بود. دوباره تلاش کنید.');
+        this.error.set(error.message || 'عملیات ناموفق بود. دوباره تلاش کنید.');
       },
     });
   }

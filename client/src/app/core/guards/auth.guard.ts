@@ -12,7 +12,7 @@ export const authGuard: CanActivateFn = (_route, state) => {
   if (auth.isLoggedIn()) return true;
 
   toast.warning('برای دسترسی به این بخش باید وارد شوید.');
-  return router.createUrlTree(['/admin/login'], { queryParams: { redirect: state.url } });
+  return router.createUrlTree(['/login'], { queryParams: { redirect: state.url } });
 };
 
 /** Allows only admin, editor and author roles into the admin panel. */
@@ -22,11 +22,12 @@ export const staffGuard: CanActivateFn = () => {
   const toast = inject(ToastService);
 
   if (!auth.isLoggedIn()) {
-    return router.createUrlTree(['/admin/login']);
+    return router.createUrlTree(['/login']);
   }
 
   if (auth.isStaff()) return true;
 
+  // Ordinary (subscriber) accounts never enter the admin panel.
   toast.error('شما به پنل مدیریت دسترسی ندارید.');
   return router.createUrlTree(['/']);
 };
@@ -38,7 +39,7 @@ export const adminGuard: CanActivateFn = () => {
   const toast = inject(ToastService);
 
   if (!auth.isLoggedIn()) {
-    return router.createUrlTree(['/admin/login']);
+    return router.createUrlTree(['/login']);
   }
 
   if (auth.isAdmin()) return true;
@@ -47,10 +48,24 @@ export const adminGuard: CanActivateFn = () => {
   return router.createUrlTree(['/admin']);
 };
 
-/** Keeps signed-in staff away from the login page. */
+/** Keeps signed-in users away from the login page. */
 export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  return auth.isStaff() ? router.createUrlTree(['/admin']) : true;
+  if (!auth.isLoggedIn()) return true;
+
+  return auth.isStaff() ? router.createUrlTree(['/admin']) : router.createUrlTree(['/']);
+};
+
+/** Any signed-in user — ordinary customers included — reaches their own account pages. */
+export const userGuard: CanActivateFn = (_route, state) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const toast = inject(ToastService);
+
+  if (auth.isLoggedIn()) return true;
+
+  toast.warning('برای دسترسی به این بخش باید وارد شوید.');
+  return router.createUrlTree(['/login'], { queryParams: { redirect: state.url } });
 };
