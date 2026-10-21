@@ -45,15 +45,15 @@ import { ToastService } from '../../../../core/services/toast.service';
               اطلاعات حساب
             </a>
             @if (shopEnabled()) {
-              <a class="profile-nav-item" routerLink="/shop/orders">
+              <a class="profile-nav-item" routerLink="/profile" [queryParams]="{ tab: 'orders' }">
                 <app-icon name="bag" [size]="16" />
                 سفارشهای من
               </a>
-              <a class="profile-nav-item" routerLink="/shop/wishlist">
+              <a class="profile-nav-item" routerLink="/profile" [queryParams]="{ tab: 'wishlist' }">
                 <app-icon name="heart" [size]="16" />
                 علاقهمندیها
               </a>
-              <a class="profile-nav-item" routerLink="/shop/compare">
+              <a class="profile-nav-item" routerLink="/profile" [queryParams]="{ tab: 'compare' }">
                 <app-icon name="scale" [size]="16" />
                 مقایسه محصولات
               </a>

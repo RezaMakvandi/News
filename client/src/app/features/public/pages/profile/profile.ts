@@ -1,17 +1,20 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { IconComponent } from '../../../../shared/components/icon/icon';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SettingsService } from '../../../../core/services/settings.service';
 import { SeoService } from '../../../../core/services/seo.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { USER_ROLE_LABELS } from '../../../../core/models/user.model';
+import { MyOrdersPage } from '../shop/my-orders';
+import { WishlistPage } from '../shop/wishlist';
+import { ComparePage } from '../shop/compare';
 
 /** Ordinary-user account page — reachable for every signed-in role. */
 @Component({
   selector: 'app-profile-page',
-  imports: [FormsModule, RouterLink, IconComponent],
+  imports: [FormsModule, RouterLink, IconComponent, MyOrdersPage, WishlistPage, ComparePage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page-banner">
@@ -41,20 +44,39 @@ import { USER_ROLE_LABELS } from '../../../../core/models/user.model';
           </div>
 
           <nav class="profile-nav" aria-label="فهرست حساب کاربری">
-            <a class="profile-nav-item is-active" routerLink="/profile">
+            <a
+              class="profile-nav-item"
+              routerLink="/profile"
+              [class.is-active]="activeTab() === 'account'"
+            >
               <app-icon name="user" [size]="16" />
               اطلاعات حساب
             </a>
             @if (shopEnabled()) {
-              <a class="profile-nav-item" routerLink="/shop/orders">
+              <a
+                class="profile-nav-item"
+                routerLink="/profile"
+                [queryParams]="{ tab: 'orders' }"
+                [class.is-active]="activeTab() === 'orders'"
+              >
                 <app-icon name="bag" [size]="16" />
                 سفارشهای من
               </a>
-              <a class="profile-nav-item" routerLink="/shop/wishlist">
+              <a
+                class="profile-nav-item"
+                routerLink="/profile"
+                [queryParams]="{ tab: 'wishlist' }"
+                [class.is-active]="activeTab() === 'wishlist'"
+              >
                 <app-icon name="heart" [size]="16" />
                 علاقهمندیها
               </a>
-              <a class="profile-nav-item" routerLink="/shop/compare">
+              <a
+                class="profile-nav-item"
+                routerLink="/profile"
+                [queryParams]="{ tab: 'compare' }"
+                [class.is-active]="activeTab() === 'compare'"
+              >
                 <app-icon name="scale" [size]="16" />
                 مقایسه محصولات
               </a>
@@ -73,9 +95,11 @@ import { USER_ROLE_LABELS } from '../../../../core/models/user.model';
         </aside>
 
         <div class="card card-pad profile-main">
-          <h2 class="profile-section-title">ویرایش اطلاعات</h2>
+          @switch (activeTab()) {
+            @case ('account') {
+              <h2 class="profile-section-title">ویرایش اطلاعات</h2>
 
-          <form (submit)="submit($event)" class="stack-lg">
+              <form (submit)="submit($event)" class="stack-lg">
             @if (error()) {
               <div class="badge badge-danger auth-error">{{ error() }}</div>
             }
@@ -146,6 +170,17 @@ import { USER_ROLE_LABELS } from '../../../../core/models/user.model';
               </button>
             </div>
           </form>
+            }
+            @case ('orders') {
+              <app-my-orders />
+            }
+            @case ('wishlist') {
+              <app-wishlist />
+            }
+            @case ('compare') {
+              <app-compare />
+            }
+          }
         </div>
       </div>
     </div>
@@ -257,8 +292,12 @@ export class ProfilePage {
   private readonly toast = inject(ToastService);
   private readonly seo = inject(SeoService);
   protected readonly settings = inject(SettingsService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   protected readonly shopEnabled = this.settings.shopEnabled;
+
+  protected readonly activeTab = signal<'account' | 'orders' | 'wishlist' | 'compare'>('account');
 
   protected name = '';
   protected avatar = '';
@@ -273,6 +312,25 @@ export class ProfilePage {
   constructor() {
     this.seo.set({ title: 'حساب کاربری من | زوم‌آیتی' });
     this.reset();
+
+    this.route.queryParamMap.subscribe((params) => {
+      const tab = params.get('tab');
+      if (tab === 'orders' || tab === 'wishlist' || tab === 'compare') {
+        this.activeTab.set(tab);
+      } else {
+        this.activeTab.set('account');
+      }
+    });
+  }
+
+  protected setTab(tab: 'account' | 'orders' | 'wishlist' | 'compare'): void {
+    this.activeTab.set(tab);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   protected submit(event: Event): void {
