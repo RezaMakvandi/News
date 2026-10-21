@@ -128,6 +128,12 @@ export const routes: Routes = [
         title: 'چیدمان صفحه اصلی | پنل مدیریت',
       },
       {
+        path: 'menus',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./features/admin/pages/menus/menus').then((m) => m.MenusPage),
+        title: 'منوها | پنل مدیریت',
+      },
+      {
         path: 'shop',
         canActivate: [adminShopEnabledGuard],
         loadComponent: () =>

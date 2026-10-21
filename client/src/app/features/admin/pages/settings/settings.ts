@@ -48,6 +48,25 @@ interface SettingRow {
     @if (loading()) {
       <app-spinner label="در حال بارگذاری تنظیمات…" />
     } @else {
+      <div class="settings-tabs" role="tablist" aria-label="بخش تنظیمات">
+        <button
+          type="button"
+          class="settings-tab"
+          [class.is-active]="settingsTab() === 'general'"
+          (click)="settingsTab.set('general')"
+        >
+          عمومی
+        </button>
+        <button
+          type="button"
+          class="settings-tab"
+          [class.is-active]="settingsTab() === 'shop'"
+          (click)="settingsTab.set('shop')"
+        >
+          فروشگاه
+        </button>
+      </div>
+
       <div class="settings-grid">
         @for (group of groups(); track group) {
           <div class="card card-pad">
@@ -91,6 +110,16 @@ interface SettingRow {
                       [ngModel]="asString(item.value)"
                       (ngModelChange)="setValue(item.key, $event)"
                     ></textarea>
+                  } @else if (item.key === 'themeDefault') {
+                    <label class="label">{{ item.label }}</label>
+                    <select
+                      class="input"
+                      [ngModel]="asString(item.value)"
+                      (ngModelChange)="setValue(item.key, $event)"
+                    >
+                      <option value="light">روشن</option>
+                      <option value="dark">تاریک</option>
+                    </select>
                   } @else if (isNumber(item.key)) {
                     <label class="label">{{ item.label }}</label>
                     <input
@@ -173,11 +202,41 @@ interface SettingRow {
     }
   `,
   styles: `
+    .settings-tabs {
+      display: inline-flex;
+      gap: var(--space-2);
+      margin-bottom: var(--space-5);
+      padding: var(--space-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-subtle, var(--bg-hover));
+    }
+
+    .settings-tab {
+      padding: var(--space-2) var(--space-4);
+      border: 0;
+      border-radius: var(--radius-xs);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .settings-tab:hover {
+      color: var(--text);
+    }
+
+    .settings-tab.is-active {
+      background: var(--accent);
+      color: #fff;
+    }
+
     .settings-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr;
       gap: var(--space-5);
-      align-items: start;
     }
 
     .stack-lg > * + * {
@@ -213,7 +272,7 @@ interface SettingRow {
 
     @media (max-width: 900px) {
       .settings-grid {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: 1fr;
       }
     }
   `,
@@ -228,6 +287,7 @@ export class SettingsPage {
   protected readonly saving = signal(false);
   protected readonly testingMail = signal(false);
   protected readonly items = signal<SettingRow[]>([]);
+  protected readonly settingsTab = signal<'general' | 'shop'>('general');
 
   private readonly dirty = new Map<string, unknown>();
 
@@ -238,7 +298,11 @@ export class SettingsPage {
 
   protected groups(): SettingGroup[] {
     const present = new Set(this.items().map((item) => item.group));
-    return SETTING_GROUP_ORDER.filter((group) => present.has(group));
+    const tabGroups =
+      this.settingsTab() === 'shop'
+        ? (['shop', 'payment'] as SettingGroup[])
+        : (['general', 'appearance', 'content', 'social', 'seo', 'footer', 'mail'] as SettingGroup[]);
+    return SETTING_GROUP_ORDER.filter((group) => tabGroups.includes(group) && present.has(group));
   }
 
   protected itemsByGroup(group: SettingGroup): SettingRow[] {

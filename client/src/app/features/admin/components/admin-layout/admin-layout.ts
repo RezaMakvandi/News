@@ -67,6 +67,7 @@ const NAV: NavGroup[] = [
     items: [
       { path: '/admin/users', label: 'کاربران', icon: 'user', roles: ADMIN_ROLES },
       { path: '/admin/home-layout', label: 'چیدمان صفحه اصلی', icon: 'grid', roles: ADMIN_ROLES },
+      { path: '/admin/menus', label: 'منوها', icon: 'menu', roles: ADMIN_ROLES },
       { path: '/admin/settings', label: 'تنظیمات', icon: 'settings', roles: ADMIN_ROLES },
     ],
   },

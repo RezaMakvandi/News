@@ -42,13 +42,44 @@ import { USER_ROLE_LABELS } from '../../../core/models/user.model';
           >
             صفحه اصلی
           </a>
-          @if (shopEnabled()) {
+          @if (shopEnabled() && !menuTree()) {
             <a routerLink="/shop" routerLinkActive="is-active">فروشگاه</a>
           }
-          @for (category of categories(); track category._id) {
-            <a [routerLink]="['/category', category.slug]" routerLinkActive="is-active">
-              {{ category.name }}
-            </a>
+          @if (menuTree(); as tree) {
+            @for (item of tree; track item.id) {
+              @if (item.children?.length) {
+                <div
+                  class="nav-item has-submenu"
+                  [class.is-mega]="item.mega"
+                  [class.is-open]="openMenuId() === item.id"
+                  (mouseenter)="openMenuId.set(item.id)"
+                  (mouseleave)="openMenuId.set(null)"
+                >
+                  <a
+                    href="#"
+                    (click)="toggleMenu(item, $event)"
+                    routerLinkActive="is-active"
+                  >
+                    {{ item.label }}
+                  </a>
+                  <div class="submenu" [class.mega-panel]="item.mega">
+                    @for (child of item.children; track child.id) {
+                      <a href="#" (click)="go(child.url, $event)">{{ child.label }}</a>
+                    }
+                  </div>
+                </div>
+              } @else {
+                <a href="#" (click)="go(item.url, $event)" routerLinkActive="is-active">
+                  {{ item.label }}
+                </a>
+              }
+            }
+          } @else {
+            @for (category of categories(); track category._id) {
+              <a [routerLink]="['/category', category.slug]" routerLinkActive="is-active">
+                {{ category.name }}
+              </a>
+            }
           }
         </nav>
 
@@ -231,23 +262,38 @@ import { USER_ROLE_LABELS } from '../../../core/models/user.model';
           >
             صفحه اصلی
           </a>
-          @for (category of categories(); track category._id) {
-            <a
-              [routerLink]="['/category', category.slug]"
-              routerLinkActive="is-active"
-              (click)="closeMobile()"
-            >
-              {{ category.name }}
-            </a>
-          }
-          @if (shopEnabled()) {
-            <a routerLink="/shop" routerLinkActive="is-active" (click)="closeMobile()">فروشگاه</a>
-            <a routerLink="/shop/wishlist" routerLinkActive="is-active" (click)="closeMobile()"
-              >علاقهمندیها</a
-            >
-            <a routerLink="/shop/orders" routerLinkActive="is-active" (click)="closeMobile()"
-              >سفارشهای من</a
-            >
+          @if (menuTree(); as tree) {
+            @for (item of tree; track item.id) {
+              <a href="#" (click)="go(item.url, $event); closeMobile()">{{ item.label }}</a>
+              @for (child of item.children; track child.id) {
+                <a
+                  class="mobile-sub"
+                  href="#"
+                  (click)="go(child.url, $event); closeMobile()"
+                >
+                  — {{ child.label }}
+                </a>
+              }
+            }
+          } @else {
+            @for (category of categories(); track category._id) {
+              <a
+                [routerLink]="['/category', category.slug]"
+                routerLinkActive="is-active"
+                (click)="closeMobile()"
+              >
+                {{ category.name }}
+              </a>
+            }
+            @if (shopEnabled()) {
+              <a routerLink="/shop" routerLinkActive="is-active" (click)="closeMobile()">فروشگاه</a>
+              <a routerLink="/shop/wishlist" routerLinkActive="is-active" (click)="closeMobile()"
+                >علاقهمندیها</a
+              >
+              <a routerLink="/shop/orders" routerLinkActive="is-active" (click)="closeMobile()"
+                >سفارشهای من</a
+              >
+            }
           }
           <a routerLink="/contact" routerLinkActive="is-active" (click)="closeMobile()"
             >تماس با ما</a
@@ -405,6 +451,48 @@ import { USER_ROLE_LABELS } from '../../../core/models/user.model';
         flex-shrink: 0;
       }
     }
+
+    /* ----------------------------- Mega menu ----------------------------- */
+    .nav-item.has-submenu { position: relative; }
+    .nav-item.has-submenu > a::after { content: ' ▾'; font-size: 0.7em; }
+    .submenu {
+      position: absolute;
+      top: 100%;
+      inset-inline-start: 0;
+      width: max-content;
+      max-width: min(90vw, 640px);
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow);
+      padding: 6px;
+      display: none;
+      flex-direction: column;
+      gap: 2px;
+      z-index: var(--z-overlay);
+    }
+    .nav-item.has-submenu:hover .submenu,
+    .nav-item.has-submenu:focus-within .submenu,
+    .nav-item.is-open .submenu { display: flex; }
+    .submenu a {
+      padding: 8px 10px;
+      border-radius: var(--radius-xs);
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.86rem;
+      font-weight: 600;
+    }
+    .submenu a:hover { background: var(--bg-hover); }
+    .submenu.mega-panel {
+      display: none;
+      grid-template-columns: repeat(3, max-content);
+      gap: var(--space-2);
+      width: max-content;
+      max-width: min(90vw, 720px);
+    }
+    .nav-item.is-mega:hover .submenu.mega-panel,
+    .nav-item.is-mega:focus-within .submenu.mega-panel,
+    .nav-item.is-mega.is-open .submenu.mega-panel { display: grid; }
   `,
   host: {
     '(window:scroll)': 'onScroll()',
@@ -422,6 +510,7 @@ export class SiteHeaderComponent {
 
   protected readonly scrolled = signal(false);
   protected readonly mobileOpen = signal(false);
+  protected readonly openMenuId = signal<string | null>(null);
   protected readonly searchOpen = signal(false);
   protected readonly query = signal('');
   protected readonly profileOpen = signal(false);
@@ -440,6 +529,28 @@ export class SiteHeaderComponent {
     () => (this.settings.settings()['siteTagline'] as string) || 'رسانه فناوری',
   );
   protected readonly siteInitial = computed(() => this.siteName().charAt(0));
+
+  /** Top-level menu tree from settings, or null to fall back to categories. */
+  protected readonly menuTree = computed(() => {
+    const raw = this.settings.settings()['menuItems'];
+    if (!Array.isArray(raw) || !raw.length) return null;
+    const items = raw as any[];
+    const byParent = new Map<string | null, any[]>();
+    for (const item of items) {
+      const parent = (item.parent as string | null) ?? null;
+      if (!byParent.has(parent)) byParent.set(parent, []);
+      byParent.get(parent)!.push(item);
+    }
+    for (const arr of byParent.values()) {
+      arr.sort((a: any, b: any) => Number(a.order ?? 0) - Number(b.order ?? 0));
+    }
+    const build = (parent: string | null): any[] =>
+      (byParent.get(parent) ?? []).map((item: any) => ({
+        ...item,
+        children: build(item.id),
+      }));
+    return build(null);
+  });
 
   /** Master shop switch from site settings; hides shop links when off. */
   protected readonly shopEnabled = this.settings.shopEnabled;
@@ -471,6 +582,21 @@ export class SiteHeaderComponent {
 
   protected closeMobile(): void {
     this.mobileOpen.set(false);
+  }
+
+  protected go(url: string, event?: Event): void {
+    event?.preventDefault();
+    if (!url) return;
+    void this.router.navigateByUrl(url);
+  }
+
+  protected toggleMenu(item: any, event?: Event): void {
+    event?.preventDefault();
+    if (item?.children?.length) {
+      this.openMenuId.update((current) => (current === item.id ? null : item.id));
+    } else if (item?.url) {
+      void this.router.navigateByUrl(item.url);
+    }
   }
 
   /** Close the profile dropdown when clicking anywhere outside it. */
