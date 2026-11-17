@@ -54,14 +54,22 @@ import { USER_ROLE_LABELS } from '../../../core/models/user.model';
                   [class.is-open]="openMenuId() === item.id"
                   (mouseenter)="openMenuId.set(item.id)"
                   (mouseleave)="openMenuId.set(null)"
+                  (focusin)="openMenuId.set(item.id)"
+                  (focusout)="onMenuFocusOut($event)"
                 >
-                  <a
-                    href="#"
-                    (click)="toggleMenu(item, $event)"
-                    routerLinkActive="is-active"
-                  >
-                    {{ item.label }}
-                  </a>
+                  @if (item.url) {
+                    <a
+                      [routerLink]="item.url"
+                      routerLinkActive="is-active"
+                      (click)="openMenuId.set(null)"
+                    >
+                      {{ item.label }}
+                    </a>
+                  } @else {
+                    <a href="#" (click)="toggleMenu(item, $event)">
+                      {{ item.label }}
+                    </a>
+                  }
                   <div class="submenu" [class.mega-panel]="item.mega">
                     @for (child of item.children; track child.id) {
                       <a href="#" (click)="go(child.url, $event)">{{ child.label }}</a>
@@ -471,8 +479,6 @@ import { USER_ROLE_LABELS } from '../../../core/models/user.model';
       gap: 2px;
       z-index: var(--z-overlay);
     }
-    .nav-item.has-submenu:hover .submenu,
-    .nav-item.has-submenu:focus-within .submenu,
     .nav-item.is-open .submenu { display: flex; }
     .submenu a {
       padding: 8px 10px;
@@ -490,8 +496,6 @@ import { USER_ROLE_LABELS } from '../../../core/models/user.model';
       width: max-content;
       max-width: min(90vw, 720px);
     }
-    .nav-item.is-mega:hover .submenu.mega-panel,
-    .nav-item.is-mega:focus-within .submenu.mega-panel,
     .nav-item.is-mega.is-open .submenu.mega-panel { display: grid; }
   `,
   host: {
@@ -586,8 +590,17 @@ export class SiteHeaderComponent {
 
   protected go(url: string, event?: Event): void {
     event?.preventDefault();
+    this.openMenuId.set(null);
     if (!url) return;
     void this.router.navigateByUrl(url);
+  }
+
+  /** Closes the open dropdown once keyboard focus leaves its nav item. */
+  protected onMenuFocusOut(event: FocusEvent): void {
+    const next = event.relatedTarget as Node | null;
+    if (!next || !(event.currentTarget as HTMLElement).contains(next)) {
+      this.openMenuId.set(null);
+    }
   }
 
   protected toggleMenu(item: any, event?: Event): void {
