@@ -28,6 +28,7 @@ import {
   sendMail,
   verifyMail,
 } from "../services/mail.service.js";
+import { verifySms } from "../services/sms.service.js";
 
 export const DEFAULT_SETTINGS: Record<
   string,
@@ -468,6 +469,60 @@ export const DEFAULT_SETTINGS: Record<
       label:
         "رمز عبور SMTP",
     },
+  /* ------------------------------- SMS -------------------------------- */
+  smsProvider:
+    {
+      value:
+        "melipayamak",
+      group:
+        "sms",
+      label:
+        "پنل پیامکی",
+    },
+  smsUsername:
+    {
+      value:
+        "",
+      group:
+        "sms",
+      label:
+        "نام کاربری ملی پیامک",
+    },
+  smsPassword:
+    {
+      value:
+        "",
+      group:
+        "sms",
+      label:
+        "رمز عبور / ApiKey ملی پیامک",
+    },
+  smsFrom:
+    {
+      value:
+        "",
+      group:
+        "sms",
+      label:
+        "شماره فرستنده",
+    },
+  smsIsFlash:
+    {
+      value: false,
+      group:
+        "sms",
+      label:
+        "ارسال پیامک فلش",
+    },
+  smsTestNumber:
+    {
+      value:
+        "",
+      group:
+        "sms",
+      label:
+        "شماره موبایل آزمایشی",
+    },
 };
 
 const SAFE_FOOTER_URL = /^(https?:\/\/|\/|mailto:|tel:|#)/i;
@@ -530,6 +585,26 @@ const sanitizeFooterConfig = (value: unknown): Record<string, unknown> => {
       }))
       .filter((badge) => Boolean(badge.image)),
   };
+};
+
+/** Plain-text SMS settings that are trimmed before being stored. */
+const SMS_TEXT_KEYS = new Set([
+  "smsUsername",
+  "smsPassword",
+  "smsFrom",
+  "smsTestNumber",
+]);
+
+/**
+ * Normalises values saved from the settings screen. Melipayamak is the only
+ * SMS provider for now, and its credentials are plain (trimmed) strings.
+ */
+const normalizeSettingValue = (key: string, value: unknown): unknown => {
+  if (key === "footerConfig") return sanitizeFooterConfig(value);
+  if (key === "smsProvider") return "melipayamak";
+  if (SMS_TEXT_KEYS.has(key))
+    return typeof value === "string" ? value.trim().slice(0, 300) : "";
+  return value;
 };
 
 /** GET /api/settings — public settings map. */export const getPublic =
@@ -721,10 +796,7 @@ export const updateMany =
 
       const items = rawItems.map((item) => ({
         ...item,
-        value:
-          item.key === "footerConfig"
-            ? sanitizeFooterConfig(item.value)
-            : item.value,
+        value: normalizeSettingValue(item.key, item.value),
       }));
 
       await Setting.bulkWrite(
@@ -1793,5 +1865,56 @@ export const testMail =
             "ایمیل آزمایشی ارسال شد",
         },
       );
+    },
+  );
+
+/* --------------------------------- SMS --------------------------------- */
+
+/** POST /api/admin/sms/test — sends a test SMS using the saved panel settings. */
+export const testSms =
+  asyncHandler(
+    async (
+      req: AuthRequest,
+      res: Response,
+    ) => {
+      const {
+        phone,
+      } =
+        (req.body ??
+          {}) as {
+          phone?: string;
+        };
+      const to =
+        String(
+          phone ??
+            "",
+        ).trim() ||
+        undefined;
+
+      try {
+        const result =
+          await verifySms(
+            to,
+          );
+        return sendSuccess(
+          res,
+          result,
+          {
+            message:
+              "پیامک آزمایشی ارسال شد",
+          },
+        );
+      } catch (error) {
+        logger.error(
+          "sms test failed:",
+          error,
+        );
+        throw ApiError.badRequest(
+          error instanceof
+            Error
+            ? error.message
+            : "ارسال پیامک آزمایشی ناموفق بود",
+        );
+      }
     },
   );

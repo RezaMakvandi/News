@@ -97,6 +97,13 @@ export class AdminService {
     return this.api.post<null>('admin/mail/test', { email });
   }
 
+  /* --------------------------------- SMS --------------------------------- */
+
+  /** POST /api/admin/sms/test — sends a test SMS with the saved panel settings. */
+  sendTestSms(phone?: string): Observable<{ recId: string }> {
+    return this.api.post<{ recId: string }>('admin/sms/test', { phone });
+  }
+
   /* -------------------------------- Stats -------------------------------- */
 
   /** GET /api/admin/stats/overview */

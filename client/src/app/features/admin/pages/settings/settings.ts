@@ -38,7 +38,7 @@ interface SettingRow {
       <div>
         <h1>تنظیمات سایت</h1>
         <p class="text-sm text-muted">
-          پیکربندی عمومی، سئو، شبکه‌های اجتماعی، فوتر، فروشگاه و درگاه پرداخت.
+          پیکربندی عمومی، سئو، شبکه‌های اجتماعی، فوتر، فروشگاه، درگاه پرداخت و پنل پیامکی.
         </p>
       </div>
       <button type="button" class="btn btn-primary" (click)="save()" [disabled]="saving()">
@@ -144,6 +144,15 @@ interface SettingRow {
                       <option value="light">روشن</option>
                       <option value="dark">تاریک</option>
                     </select>
+                  } @else if (item.key === 'smsProvider') {
+                    <label class="label">{{ item.label }}</label>
+                    <select
+                      class="input"
+                      [ngModel]="asString(item.value)"
+                      (ngModelChange)="setValue(item.key, $event)"
+                    >
+                      <option value="melipayamak">ملی پیامک</option>
+                    </select>
                   } @else if (isNumber(item.key)) {
                     <label class="label">{{ item.label }}</label>
                     <input
@@ -179,7 +188,7 @@ interface SettingRow {
                     <label class="label">{{ item.label }}</label>
                     <input
                       class="input"
-                      [dir]="isUrlLike(item.key) ? 'ltr' : 'auto'"
+                      [dir]="isLtr(item.key) ? 'ltr' : 'auto'"
                       [ngModel]="asString(item.value)"
                       (ngModelChange)="setValue(item.key, $event)"
                     />
@@ -192,7 +201,7 @@ interface SettingRow {
             </div>
 
             @if (group === 'mail') {
-              <div class="mail-test">
+              <div class="test-panel">
                 <p class="field-hint">
                   پس از ذخیره تنظیمات، برای اطمینان از درستی اطلاعات SMTP یک ایمیل آزمایشی بفرستید.
                 </p>
@@ -208,6 +217,28 @@ interface SettingRow {
                     <app-icon name="send" [size]="14" />
                   }
                   ارسال ایمیل آزمایشی
+                </button>
+              </div>
+            }
+
+            @if (group === 'sms') {
+              <div class="test-panel">
+                <p class="field-hint">
+                  پس از ذخیره تنظیمات، برای اطمینان از درستی اطلاعات پنل پیامکی یک پیامک آزمایشی
+                  به «شماره موبایل آزمایشی» بفرستید.
+                </p>
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-sm"
+                  (click)="sendTestSms()"
+                  [disabled]="testingSms()"
+                >
+                  @if (testingSms()) {
+                    <span class="spinner spinner-sm"></span>
+                  } @else {
+                    <app-icon name="send" [size]="14" />
+                  }
+                  ارسال پیامک آزمایشی
                 </button>
               </div>
             }
@@ -281,7 +312,7 @@ interface SettingRow {
       color: var(--text-muted);
     }
 
-    .mail-test {
+    .test-panel {
       margin-top: var(--space-4);
       padding-top: var(--space-4);
       border-top: 1px dashed var(--border);
@@ -291,7 +322,7 @@ interface SettingRow {
       align-items: flex-start;
     }
 
-    .mail-test .field-hint {
+    .test-panel .field-hint {
       margin: 0;
     }
 
@@ -317,6 +348,7 @@ export class SettingsPage {
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
   protected readonly testingMail = signal(false);
+  protected readonly testingSms = signal(false);
   protected readonly items = signal<SettingRow[]>([]);
   protected readonly settingsTab = signal<'general' | 'footer' | 'shop'>('general');
   protected readonly footerDraft = signal<FooterConfig>(DEFAULT_FOOTER_CONFIG);
@@ -335,7 +367,7 @@ export class SettingsPage {
         ? (['shop', 'payment'] as SettingGroup[])
         : this.settingsTab() === 'footer'
           ? (['footer'] as SettingGroup[])
-          : (['general', 'appearance', 'content', 'social', 'seo', 'mail'] as SettingGroup[]);
+          : (['general', 'appearance', 'content', 'social', 'seo', 'mail', 'sms'] as SettingGroup[]);
     return SETTING_GROUP_ORDER.filter((group) => tabGroups.includes(group) && present.has(group));
   }
 
@@ -393,6 +425,16 @@ export class SettingsPage {
     return key.startsWith('social') || key === 'accentColor' || key === 'payCallbackUrl';
   }
 
+  /** Inputs that should be rendered left-to-right (URLs, phones, usernames). */
+  protected isLtr(key: string): boolean {
+    return (
+      this.isUrlLike(key) ||
+      key === 'smsUsername' ||
+      key === 'smsFrom' ||
+      key === 'smsTestNumber'
+    );
+  }
+
   protected isMerchantId(key: string): boolean {
     return key === 'zarinpalMerchantId';
   }
@@ -422,6 +464,18 @@ export class SettingsPage {
         return 'در بیشتر سرویسها با ایمیل فرستنده یکسان است.';
       case 'smtpPass':
         return this.smtpPassHint();
+      case 'smsProvider':
+        return 'پیامک‌های سایت از طریق این پنل ارسال می‌شوند. در حال حاضر پنل ملی پیامک پشتیبانی می‌شود.';
+      case 'smsUsername':
+        return 'نام کاربری حساب ملی پیامک (همان نام کاربری ورود به پنل).';
+      case 'smsPassword':
+        return 'رمز عبور پنل ملی پیامک یا ApiKey ساخته‌شده در پنل. اگر در پنل ملی پیامک استفاده از ApiKey الزامی باشد، باید ApiKey وارد شود.';
+      case 'smsFrom':
+        return 'شماره خط فرستنده که در پنل ملی پیامک برای شما فعال است (مثلاً 5000...).';
+      case 'smsIsFlash':
+        return 'در صورت فعال بودن، پیامک به صورت فلش ارسال می‌شود و در گوشی ذخیره نمی‌شود.';
+      case 'smsTestNumber':
+        return 'پیامک آزمایشی به این شماره ارسال می‌شود. شماره را به شکل ۰۹۱۲۳۴۵۶۷۸۹ وارد کنید.';
       default:
         return '';
     }
@@ -494,6 +548,34 @@ export class SettingsPage {
       error: (error: Error) => {
         this.testingMail.set(false);
         this.toast.error(error.message || 'ارسال ایمیل آزمایشی ناموفق بود');
+      },
+    });
+  }
+
+  /** Sends a test SMS using the currently saved SMS panel settings. */
+  protected sendTestSms(): void {
+    if (this.dirty.size) {
+      this.toast.info('ابتدا تنظیمات را ذخیره کنید، سپس پیامک آزمایشی بفرستید');
+      return;
+    }
+
+    const row = this.items().find((item) => item.key === 'smsTestNumber');
+    const phone = typeof row?.value === 'string' ? row.value.trim() : '';
+    if (!phone) {
+      this.toast.info('ابتدا «شماره موبایل آزمایشی» را وارد و ذخیره کنید');
+      return;
+    }
+
+    this.testingSms.set(true);
+    this.adminService.sendTestSms(phone).subscribe({
+      next: (result) => {
+        this.testingSms.set(false);
+        const recId = result?.recId ? ` (شناسه ارسال: ${result.recId})` : '';
+        this.toast.success(`پیامک آزمایشی ارسال شد${recId}. دریافت آن را بررسی کنید.`);
+      },
+      error: (error: Error) => {
+        this.testingSms.set(false);
+        this.toast.error(error.message || 'ارسال پیامک آزمایشی ناموفق بود');
       },
     });
   }

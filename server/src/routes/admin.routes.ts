@@ -494,6 +494,15 @@ router.post(
   settings.testMail,
 );
 
+/* --------------------------------- SMS --------------------------------- */
+router.post(
+  "/sms/test",
+  requireRole(
+    ...ADMIN_ROLES,
+  ),
+  settings.testSms,
+);
+
 /* -------------------------------- Stats -------------------------------- */
 router.get(
   "/stats/overview",

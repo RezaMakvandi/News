@@ -9,7 +9,8 @@ export type SettingGroup =
   | 'appearance'
   | 'shop'
   | 'payment'
-  | 'mail';
+  | 'mail'
+  | 'sms';
 
 export interface SettingItem {
   key: string;
@@ -79,6 +80,7 @@ export const SETTING_GROUP_LABELS: Record<SettingGroup, string> = {
   shop: 'فروشگاه',
   payment: 'درگاه پرداخت زرین‌پال',
   mail: 'ایمیل و پاسخ به پیامها',
+  sms: 'پنل پیامکی',
 };
 
 export const SETTING_GROUP_ORDER: SettingGroup[] = [
@@ -91,6 +93,7 @@ export const SETTING_GROUP_ORDER: SettingGroup[] = [
   'shop',
   'payment',
   'mail',
+  'sms',
 ];
 
 /** Keys rendered as toggles rather than text inputs. */
@@ -102,13 +105,14 @@ export const SETTING_BOOLEAN_KEYS = new Set([
   'codEnabled',
   'zarinpalSandbox',
   'smtpSecure',
+  'smsIsFlash',
 ]);
 
 /** Keys that hold a colour value. */
 export const SETTING_COLOR_KEYS = new Set(['accentColor']);
 
 /** Keys rendered as password inputs (values are masked, never echoed back). */
-export const SETTING_SECRET_KEYS = new Set(['smtpPass']);
+export const SETTING_SECRET_KEYS = new Set(['smtpPass', 'smsPassword']);
 
 /** Keys edited by a dedicated screen, hidden from the generic settings form. */
 export const SETTING_MANAGED_KEYS = new Set(['homeLayout', 'menuItems', 'footerConfig']);
