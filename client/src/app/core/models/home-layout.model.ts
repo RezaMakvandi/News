@@ -97,7 +97,7 @@ export const HOME_SECTION_DEFS: HomeSectionDef[] = [
   },
   {
     type: 'latest_articles',
-    label: 'تازهترین اخبار',
+    label: 'تازه ترین اخبار',
     icon: 'file',
     description: 'آخرین اخبار منتشرشده.',
     defaults: {
