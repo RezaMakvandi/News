@@ -1,3 +1,5 @@
+import type { FooterConfig } from './footer.model';
+
 export type SettingGroup =
   | 'general'
   | 'social'
@@ -17,6 +19,9 @@ export interface SettingItem {
   _id?: string;
 }
 
+/** Which page the site root (`/`) renders. */
+export type HomePageMode = 'news' | 'shop';
+
 /** Public settings map — keys are flat, values are unknown-typed. */
 export interface PublicSettings {
   siteName?: string;
@@ -27,6 +32,8 @@ export interface PublicSettings {
   contactEmail?: string;
   contactPhone?: string;
   address?: string;
+  /** Home page shown at `/` — the news home or the shop home. */
+  homePage?: HomePageMode;
   socialInstagram?: string;
   socialTwitter?: string;
   socialTelegram?: string;
@@ -42,6 +49,8 @@ export interface PublicSettings {
   seoTitle?: string;
   seoKeywords?: string[];
   footerText?: string;
+  /** Custom footer layout: sections, links, logo and trust badges. */
+  footerConfig?: FooterConfig;
   commentsEnabled?: boolean;
   commentsModeration?: boolean;
   postsPerPage?: number;
@@ -102,7 +111,7 @@ export const SETTING_COLOR_KEYS = new Set(['accentColor']);
 export const SETTING_SECRET_KEYS = new Set(['smtpPass']);
 
 /** Keys edited by a dedicated screen, hidden from the generic settings form. */
-export const SETTING_MANAGED_KEYS = new Set(['homeLayout', 'menuItems']);
+export const SETTING_MANAGED_KEYS = new Set(['homeLayout', 'menuItems', 'footerConfig']);
 
 export interface Page {
   _id: string;

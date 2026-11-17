@@ -51,6 +51,8 @@ const ICONS: Record<string, string> = {
   'chevron-left': 'M14.7 5.7 16.1 7.1 11.2 12l4.9 4.9-1.4 1.4L8.4 12l6.3-6.3Z',
   'chevron-down': 'M12 15.6 5.7 9.3l1.4-1.4L12 12.8l4.9-4.9 1.4 1.4L12 15.6Z',
   'arrow-right': 'M12.5 4 11.1 5.4l5.2 5.2H3v2h13.3l-5.2 5.2 1.4 1.4L20.6 12 12.5 4Z',
+  'arrow-up': 'M12 4.2 5.6 10.6 7 12l4-4v12h2V8l4 4 1.4-1.4L12 4.2Z',
+  'arrow-down': 'M12 19.8 5.6 13.4 7 12l4 4V4h2v12l4-4 1.4 1.4L12 19.8Z',
   grid: 'M3 3h8v8H3V3Zm2 2v4h4V5H5Zm8-2h8v8h-8V3Zm2 2v4h4V5h-4ZM3 13h8v8H3v-8Zm2 2v4h4v-4H5Zm8-2h8v8h-8v-8Zm2 2v4h4v-4h-4Z',
   list: 'M3 5h18v2H3V5Zm0 6h18v2H3v-2Zm0 6h18v2H3v-2Z',
   chart: 'M4 20V10h4v10H4Zm6 0V4h4v16h-4Zm6 0v-7h4v7h-4Z',

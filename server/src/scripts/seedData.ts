@@ -1004,6 +1004,15 @@ export const settingsSeed =
         "نشانی",
     },
     {
+      key: "homePage",
+      value:
+        "news",
+      group:
+        "general",
+      label:
+        "صفحه اصلی سایت",
+    },
+    {
       key: "socialInstagram",
       value:
         "https://instagram.com/",
@@ -1071,6 +1080,44 @@ export const settingsSeed =
         "footer",
       label:
         "متن پاورقی",
+    },
+    {
+      key: "footerConfig",
+      value: {
+        showBrand: true,
+        showSocials: true,
+        showNewsletter: true,
+        logo: "",
+        about: "",
+        copyright: "",
+        sections: [
+          {
+            title: "سرویس‌های خبری",
+            source: "categories",
+            links: [
+              {
+                label: "تماس با ما",
+                url: "/contact",
+              },
+            ],
+          },
+          {
+            title: "دسترسی سریع",
+            source: "pages",
+            links: [
+              {
+                label: "جستجو",
+                url: "/search",
+              },
+            ],
+          },
+        ],
+        badges: [],
+      },
+      group:
+        "footer",
+      label:
+        "چیدمان فوتر",
     },
     {
       key: "commentsEnabled",

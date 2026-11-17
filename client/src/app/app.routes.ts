@@ -223,7 +223,8 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./features/public/pages/home/home').then((m) => m.HomePage),
+        loadComponent: () =>
+          import('./features/public/pages/home/home-route').then((m) => m.HomeRoutePage),
         title: 'زوم‌آیتی | رسانه فناوری',
       },
       {

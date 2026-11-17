@@ -210,6 +210,7 @@ export const errorHandler =
         message?: string;
         code?: number;
         name?: string;
+        details?: unknown;
         errors?: Record<
           string,
           {
@@ -228,7 +229,8 @@ export const errorHandler =
     let message =
       err.message ??
       "خطای داخلی سرور";
-    let details: unknown;
+    let details: unknown =
+      err.details;
 
     // Multer upload failures (e.g. a 91 MB video on the 12 MB multipart cap).
     if (

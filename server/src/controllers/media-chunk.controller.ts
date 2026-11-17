@@ -544,6 +544,8 @@ export const completeChunkedUpload =
             folder:
               body.folder ??
               "article-videos",
+            storage:
+              "disk",
             uploadedBy:
               req
                 .user

@@ -14,6 +14,7 @@ import {
   normalizeHomeLayout,
   type HomeSection,
 } from '../models/home-layout.model';
+import { normalizeFooterConfig, type FooterConfig } from '../models/footer.model';
 
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
@@ -33,8 +34,21 @@ export class SettingsService {
     return configured.length ? configured : HOME_LAYOUT_DEFAULT;
   });
 
+  /** Footer layout, links, logo and badges configured in the admin panel. */
+  readonly footerConfig = computed<FooterConfig>(() =>
+    normalizeFooterConfig(this.settingsSignal()['footerConfig']),
+  );
+
   /** Master shop switch — surfaces may render only while this is true. */
   readonly shopEnabled = computed(() => this.settingsSignal()['shopEnabled'] !== false);
+
+  /** Configured root page — `news` (default) or `shop`. */
+  readonly homePage = computed(() =>
+    this.settingsSignal()['homePage'] === 'shop' ? 'shop' : 'news',
+  );
+
+  /** True when `/` should render the storefront instead of the news home. */
+  readonly shopAsHome = computed(() => this.homePage() === 'shop' && this.shopEnabled());
 
   /**
    * GET /api/settings — cached in a signal for header/footer rendering.
@@ -71,6 +85,11 @@ export class SettingsService {
   /** PUT /api/admin/settings — persists the ordered home layout. */
   saveHomeLayout(layout: HomeSection[]): Observable<SettingItem[]> {
     return this.adminSave([{ key: 'homeLayout', value: layout }]);
+  }
+
+  /** PUT /api/admin/settings — persists the footer layout. */
+  saveFooterConfig(config: FooterConfig): Observable<SettingItem[]> {
+    return this.adminSave([{ key: 'footerConfig', value: config }]);
   }
 
   /** GET /api/pages */

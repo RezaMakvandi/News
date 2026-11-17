@@ -120,9 +120,15 @@ export class ApiService {
   private handleError = (error: unknown): Observable<never> => {
     if (error instanceof HttpErrorResponse) {
       const body = error.error as { message?: string; details?: Record<string, string> } | null;
-      const details = body?.details ? Object.values(body.details).join('، ') : '';
+      const details = body?.details
+        ? Object.values(body.details)
+            .filter((value) => typeof value === 'string' && value.trim())
+            .join('، ')
+        : '';
 
-      let message = body?.message ?? details;
+      // Field-level validation messages are far more useful than the generic
+      // "اطلاعات ارسالی معتبر نیست" wrapper, so they take precedence.
+      let message = details || body?.message;
       if (!message) {
         if (error.status === 0)
           message = 'ارتباط با سرور برقرار نشد. اتصال اینترنت یا سرور را بررسی کنید.';
@@ -133,7 +139,7 @@ export class ApiService {
         else message = 'خطای غیرمنتظره‌ای رخ داد. لطفاً دوباره تلاش کنید.';
       }
 
-      return throwError(() => Object.assign(new Error(message), { status: error.status }));
+      return throwError(() => Object.assign(new Error(message), { status: error.status, details: body?.details }));
     }
 
     return throwError(() => new Error('خطای غیرمنتظره‌ای رخ داد.'));

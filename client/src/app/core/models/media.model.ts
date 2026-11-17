@@ -9,6 +9,8 @@ export interface MediaItem {
   height?: number;
   alt?: string;
   folder: string;
+  /** `db` files are stored inside MongoDB, `disk` files under `uploads/`. */
+  storage?: 'db' | 'disk';
   uploadedBy?: string | null;
   createdAt: string;
   updatedAt: string;

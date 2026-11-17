@@ -2,10 +2,16 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../../../shared/components/icon/icon';
 import { SpinnerComponent } from '../../../../shared/components/spinner/spinner';
+import { FooterEditorComponent } from '../../components/footer-editor/footer-editor';
 import { AdminService } from '../../../../core/services/admin.service';
 import { SettingsService } from '../../../../core/services/settings.service';
 import { SeoService } from '../../../../core/services/seo.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import {
+  DEFAULT_FOOTER_CONFIG,
+  normalizeFooterConfig,
+  type FooterConfig,
+} from '../../../../core/models/footer.model';
 import type { SettingGroup } from '../../../../core/models/settings.model';
 import {
   SETTING_BOOLEAN_KEYS,
@@ -25,14 +31,14 @@ interface SettingRow {
 
 @Component({
   selector: 'app-settings-page',
-  imports: [FormsModule, IconComponent, SpinnerComponent],
+  imports: [FormsModule, IconComponent, SpinnerComponent, FooterEditorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="admin-page-head">
       <div>
         <h1>تنظیمات سایت</h1>
         <p class="text-sm text-muted">
-          پیکربندی عمومی، سئو، شبکه‌های اجتماعی، فروشگاه و درگاه پرداخت.
+          پیکربندی عمومی، سئو، شبکه‌های اجتماعی، فوتر، فروشگاه و درگاه پرداخت.
         </p>
       </div>
       <button type="button" class="btn btn-primary" (click)="save()" [disabled]="saving()">
@@ -56,6 +62,14 @@ interface SettingRow {
           (click)="settingsTab.set('general')"
         >
           عمومی
+        </button>
+        <button
+          type="button"
+          class="settings-tab"
+          [class.is-active]="settingsTab() === 'footer'"
+          (click)="settingsTab.set('footer')"
+        >
+          فوتر
         </button>
         <button
           type="button"
@@ -110,6 +124,16 @@ interface SettingRow {
                       [ngModel]="asString(item.value)"
                       (ngModelChange)="setValue(item.key, $event)"
                     ></textarea>
+                  } @else if (item.key === 'homePage') {
+                    <label class="label">{{ item.label }}</label>
+                    <select
+                      class="input"
+                      [ngModel]="asString(item.value)"
+                      (ngModelChange)="setValue(item.key, $event)"
+                    >
+                      <option value="news">صفحه اصلی فعلی (اخبار)</option>
+                      <option value="shop">صفحه اصلی فروشگاه</option>
+                    </select>
                   } @else if (item.key === 'themeDefault') {
                     <label class="label">{{ item.label }}</label>
                     <select
@@ -190,6 +214,13 @@ interface SettingRow {
           </div>
         }
       </div>
+
+      @if (settingsTab() === 'footer') {
+        <app-footer-editor
+          [config]="footerDraft()"
+          (configChange)="onFooterChange($event)"
+        />
+      }
 
       <div class="row" style="justify-content: flex-end; margin-top: var(--space-5)">
         <button type="button" class="btn btn-primary btn-lg" (click)="save()" [disabled]="saving()">
@@ -287,7 +318,8 @@ export class SettingsPage {
   protected readonly saving = signal(false);
   protected readonly testingMail = signal(false);
   protected readonly items = signal<SettingRow[]>([]);
-  protected readonly settingsTab = signal<'general' | 'shop'>('general');
+  protected readonly settingsTab = signal<'general' | 'footer' | 'shop'>('general');
+  protected readonly footerDraft = signal<FooterConfig>(DEFAULT_FOOTER_CONFIG);
 
   private readonly dirty = new Map<string, unknown>();
 
@@ -301,7 +333,9 @@ export class SettingsPage {
     const tabGroups =
       this.settingsTab() === 'shop'
         ? (['shop', 'payment'] as SettingGroup[])
-        : (['general', 'appearance', 'content', 'social', 'seo', 'footer', 'mail'] as SettingGroup[]);
+        : this.settingsTab() === 'footer'
+          ? (['footer'] as SettingGroup[])
+          : (['general', 'appearance', 'content', 'social', 'seo', 'mail'] as SettingGroup[]);
     return SETTING_GROUP_ORDER.filter((group) => tabGroups.includes(group) && present.has(group));
   }
 
@@ -313,6 +347,14 @@ export class SettingsPage {
       if (index > 0) {
         const [switchRow] = rows.splice(index, 1);
         rows.unshift(switchRow);
+      }
+    }
+    if (group === 'general') {
+      // The home page choice leads the general card.
+      const index = rows.findIndex((item) => item.key === 'homePage');
+      if (index > 0) {
+        const [homeRow] = rows.splice(index, 1);
+        rows.unshift(homeRow);
       }
     }
     return rows;
@@ -358,6 +400,8 @@ export class SettingsPage {
   /** Hint shown under a setting, if any. */
   protected hintFor(key: string): string {
     switch (key) {
+      case 'homePage':
+        return 'صفحه‌ای که در آدرس اصلی سایت (/) نمایش داده می‌شود. گزینه «صفحه اصلی فروشگاه» تنها زمانی اعمال می‌شود که فروشگاه فعال باشد.';
       case 'shopEnabled':
         return 'با غیرفعال کردن، منوی فروشگاه و همه بخشهای فروشگاه در سایت پنهان میشود و مسیرهای آن در دسترس نخواهد بود. مدیران همچنان از پنل به صفحات فروشگاه دسترسی دارند.';
       case 'zarinpalMerchantId':
@@ -419,6 +463,16 @@ export class SettingsPage {
 
   protected setValue(key: string, value: unknown): void {
     this.dirty.set(key, value);
+    // Keep the bound model in sync so the value survives tab switches/rerenders.
+    this.items.update((items) =>
+      items.map((item) => (item.key === key ? { ...item, value } : item)),
+    );
+  }
+
+  /** Keeps unsaved footer edits when switching tabs until "save" is pressed. */
+  protected onFooterChange(config: FooterConfig): void {
+    this.footerDraft.set(config);
+    this.dirty.set('footerConfig', config);
   }
 
   /** Sends a test email using the currently saved SMTP settings. */
@@ -471,9 +525,10 @@ export class SettingsPage {
     this.loading.set(true);
     this.settingsService.adminGet().subscribe({
       next: (response) => {
-        this.items.set(
-          (response.items ?? []).filter((item) => !SETTING_MANAGED_KEYS.has(item.key)),
-        );
+        const all = response.items ?? [];
+        const footerConfig = all.find((item) => item.key === 'footerConfig')?.value;
+        this.footerDraft.set(normalizeFooterConfig(footerConfig));
+        this.items.set(all.filter((item) => !SETTING_MANAGED_KEYS.has(item.key)));
         this.loading.set(false);
       },
       error: () => {

@@ -51,7 +51,7 @@ const articleValidators =
       [
         isNonEmpty,
         minLength(
-          5,
+          3,
           "عنوان",
         ),
         maxLength(
@@ -63,7 +63,7 @@ const articleValidators =
       [
         isNonEmpty,
         minLength(
-          20,
+          10,
           "متن خبر",
         ),
       ],

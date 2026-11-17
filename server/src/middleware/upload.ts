@@ -41,6 +41,12 @@ export const upload = multer({
 
 export const isImage = (mimeType: string) => IMAGE_TYPES.includes(mimeType);
 
-/** Builds the public URL for an uploaded file. */
+/**
+ * Builds the public URL for a file on disk.
+ *
+ * The path is intentionally site-relative: it works through the Angular dev
+ * proxy and in production where the API serves the built client, and it can
+ * never point at a stale host/port from `PUBLIC_URL`.
+ */
 export const publicUrlFor = (filename: string, folder: string) =>
-  `${env.publicUrl}/uploads/${folder}/${filename}`.replace(/([^:]\/)\/+/g, '$1');
+  `/uploads/${folder}/${filename}`.replace(/([^:]\/)\/+/g, '$1');

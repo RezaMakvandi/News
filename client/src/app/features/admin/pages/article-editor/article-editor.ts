@@ -521,6 +521,10 @@ export class ArticleEditorPage {
       },
       error: (error: Error) => {
         this.saving.set(false);
+        const details = (error as Error & { details?: Record<string, string> }).details;
+        if (details && typeof details === 'object') {
+          this.errors.set(details);
+        }
         this.toast.error(error.message || 'ذخیره انجام نشد');
       },
     });

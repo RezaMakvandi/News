@@ -109,6 +109,15 @@ export const DEFAULT_SETTINGS: Record<
       label:
         "نشانی",
     },
+  homePage:
+    {
+      value:
+        "news",
+      group:
+        "general",
+      label:
+        "صفحه اصلی سایت",
+    },
   socialInstagram:
     {
       value:
@@ -185,6 +194,63 @@ export const DEFAULT_SETTINGS: Record<
         "footer",
       label:
         "متن پاورقی",
+    },
+  footerConfig:
+    {
+      value:
+        {
+          showBrand:
+            true,
+          showSocials:
+            true,
+          showNewsletter:
+            true,
+          logo:
+            "",
+          about:
+            "",
+          copyright:
+            "",
+          sections:
+            [
+              {
+                title:
+                  "سرویس‌های خبری",
+                source:
+                  "categories",
+                links:
+                  [
+                    {
+                      label:
+                        "تماس با ما",
+                      url:
+                        "/contact",
+                    },
+                  ],
+              },
+              {
+                title:
+                  "دسترسی سریع",
+                source:
+                  "pages",
+                links:
+                  [
+                    {
+                      label:
+                        "جستجو",
+                      url:
+                        "/search",
+                    },
+                  ],
+              },
+            ],
+          badges:
+            [],
+        },
+      group:
+        "footer",
+      label:
+        "چیدمان فوتر",
     },
   commentsEnabled:
     {
@@ -404,8 +470,69 @@ export const DEFAULT_SETTINGS: Record<
     },
 };
 
-/** GET /api/settings — public settings map. */
-export const getPublic =
+const SAFE_FOOTER_URL = /^(https?:\/\/|\/|mailto:|tel:|#)/i;
+
+const footerText = (value: unknown, max: number): string =>
+  typeof value === "string" ? value.trim().slice(0, max) : "";
+
+const footerUrl = (value: unknown): string => {
+  const url = footerText(value, 1000);
+  return SAFE_FOOTER_URL.test(url) ? url : "";
+};
+
+/**
+ * Validates the footer layout saved from /admin/settings so stored JSON cannot
+ * hold huge payloads or `javascript:` links.
+ */
+const sanitizeFooterConfig = (value: unknown): Record<string, unknown> => {
+  const raw = (value && typeof value === "object" ? value : {}) as Record<
+    string,
+    unknown
+  >;
+  const sections = Array.isArray(raw.sections) ? raw.sections : [];
+  const badges = Array.isArray(raw.badges) ? raw.badges : [];
+
+  const isRecord = (entry: unknown): entry is Record<string, unknown> =>
+    Boolean(entry) && typeof entry === "object" && !Array.isArray(entry);
+
+  return {
+    showBrand: raw.showBrand !== false,
+    showSocials: raw.showSocials !== false,
+    showNewsletter: raw.showNewsletter !== false,
+    logo: footerUrl(raw.logo),
+    about: footerText(raw.about, 600),
+    copyright: footerText(raw.copyright, 300),
+    sections: sections
+      .filter(isRecord)
+      .slice(0, 8)
+      .map((section) => ({
+        title: footerText(section.title, 80),
+        source:
+          section.source === "categories" || section.source === "pages"
+            ? section.source
+            : "custom",
+        links: (Array.isArray(section.links) ? section.links : [])
+          .filter(isRecord)
+          .slice(0, 15)
+          .map((link) => ({
+            label: footerText(link.label, 80),
+            url: footerUrl(link.url),
+          }))
+          .filter((link) => Boolean(link.label && link.url)),
+      })),
+    badges: badges
+      .filter(isRecord)
+      .slice(0, 10)
+      .map((badge) => ({
+        image: footerUrl(badge.image),
+        url: footerUrl(badge.url),
+        alt: footerText(badge.alt, 120),
+      }))
+      .filter((badge) => Boolean(badge.image)),
+  };
+};
+
+/** GET /api/settings — public settings map. */export const getPublic =
   asyncHandler(
     async (
       _req: AuthRequest,
@@ -573,7 +700,7 @@ export const updateMany =
       res: Response,
     ) => {
       const {
-        items,
+        items: rawItems,
       } =
         req.body as {
           items: {
@@ -583,14 +710,22 @@ export const updateMany =
         };
       if (
         !Array.isArray(
-          items,
+          rawItems,
         ) ||
-        items.length ===
+        rawItems.length ===
           0
       )
         throw ApiError.badRequest(
           "تنظیماتی برای ذخیره ارسال نشده است",
         );
+
+      const items = rawItems.map((item) => ({
+        ...item,
+        value:
+          item.key === "footerConfig"
+            ? sanitizeFooterConfig(item.value)
+            : item.value,
+      }));
 
       await Setting.bulkWrite(
         items.map(

@@ -17,6 +17,7 @@ import authRoutes from "./routes/auth.routes.js";
 import articleRoutes from "./routes/article.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import shopRoutes from "./routes/shop.routes.js";
+import { mediaRoutes } from "./routes/media.routes.js";
 import {
   authorRoutes,
   categoryRoutes,
@@ -174,9 +175,14 @@ export const createApp =
       ) => {
         // Chunked video uploads send hundreds of small PUTs; the shared
         // limiter would reject them long before a 2 GB file completes.
+        // Media file reads are excluded too: a single article page can load
+        // dozens of images from the library.
         if (
           req.path.startsWith(
             "/admin/media/uploads/",
+          ) ||
+          req.path.startsWith(
+            "/media/",
           )
         ) {
           return next();
@@ -216,6 +222,10 @@ export const createApp =
     app.use(
       "/api/pages",
       pageRoutes,
+    );
+    app.use(
+      "/api/media",
+      mediaRoutes,
     );
     app.use(
       "/api/subscribers",
