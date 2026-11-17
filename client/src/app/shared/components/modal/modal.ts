@@ -1,5 +1,14 @@
-import { ChangeDetectionStrategy, Component, effect, input, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  input,
+  output,
+} from '@angular/core';
 import { IconComponent } from '../icon/icon';
+import { ScrollLockService } from '../../../core/services/scroll-lock.service';
 
 /**
  * Accessible modal shell. Emits `closed` on backdrop click, Escape, or the
@@ -52,11 +61,21 @@ export class ModalComponent {
 
   readonly closed = output<void>();
 
+  private readonly scrollLock = inject(ScrollLockService);
+  private scrollLocked = false;
+
   constructor() {
-    effect(() => {
-      const isOpen = this.open();
-      document.body.style.overflow = isOpen ? 'hidden' : '';
-    });
+    effect(() => this.setScrollLock(this.open()));
+    // Parents often remove the modal from the DOM (inside `@if`) while its
+    // `open` input is still true; make sure the page is unlocked anyway.
+    inject(DestroyRef).onDestroy(() => this.setScrollLock(false));
+  }
+
+  private setScrollLock(locked: boolean): void {
+    if (locked === this.scrollLocked) return;
+    this.scrollLocked = locked;
+    if (locked) this.scrollLock.lock();
+    else this.scrollLock.release();
   }
 
   protected onBackdrop(): void {

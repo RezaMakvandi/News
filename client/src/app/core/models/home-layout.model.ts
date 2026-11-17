@@ -101,7 +101,7 @@ export const HOME_SECTION_DEFS: HomeSectionDef[] = [
     icon: 'file',
     description: 'آخرین اخبار منتشرشده.',
     defaults: {
-      title: 'تازهترین اخبار',
+      title: 'تازه ترین اخبار',
       limit: 8,
       columns: 4,
       showCta: true,
