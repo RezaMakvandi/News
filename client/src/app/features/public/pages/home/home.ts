@@ -526,7 +526,7 @@ export class HomePage {
       case 'featured_articles':
         return 'گزارش‌های ویژه';
       case 'latest_articles':
-        return 'تازه‌ترین اخبار';
+        return 'تازه ترین اخبار';
       case 'popular_articles':
         return 'پربازدیدترین‌ها';
       case 'breaking_articles':
