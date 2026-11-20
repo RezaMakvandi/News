@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { IconComponent } from '../../../../shared/components/icon/icon';
 import { SiteHeaderComponent } from '../../../../shared/components/site-header/site-header';
 import { SiteFooterComponent } from '../../../../shared/components/site-footer/site-footer';
@@ -28,7 +29,7 @@ import type { Page } from '../../../../core/models/settings.model';
     <a class="skip-link" href="#main-content">پرش به محتوای اصلی</a>
 
     <app-site-header [categories]="categories()" />
-    @if (breakingEnabled()) {
+    @if (globalTickerEnabled()) {
       <app-breaking-ticker [items]="breaking()" />
     }
 
@@ -118,6 +119,7 @@ import type { Page } from '../../../../core/models/settings.model';
 export class PublicLayoutComponent {
   private readonly categoryService = inject(CategoryService);
   private readonly settingsService = inject(SettingsService);
+  private readonly router = inject(Router);
   private readonly articleService = inject(ArticleService);
   private readonly theme = inject(ThemeService);
   private readonly auth = inject(AuthService);
@@ -126,12 +128,30 @@ export class PublicLayoutComponent {
   protected readonly pages = signal<Page[]>([]);
   protected readonly breaking = signal<ArticleCard[]>([]);
   protected readonly showTop = signal(false);
+  protected readonly isHomeRoute = signal(false);
 
   protected readonly breakingEnabled = computed(
     () => this.settingsService.settings()['breakingEnabled'] !== false,
   );
 
+  protected readonly globalTickerEnabled = computed(() => {
+    if (!this.breakingEnabled()) return false;
+    const layout = this.settingsService.homeLayout();
+    const hasTopTicker = layout.some(
+      (s) =>
+        s.type === 'breaking_ticker' &&
+        s.enabled !== false &&
+        !!(s.topTicker || s.top || s.showAtTop || s.topMode || s.fullWidthTop),
+    );
+    if (!hasTopTicker) return false;
+    return true;
+  });
+
   constructor() {
+    const updateHome = () => this.isHomeRoute.set(this.router.url === '/' || this.router.url.startsWith('/?'));
+    updateHome();
+    this.router.events.pipe(filter((e) => e.constructor.name === 'NavigationEnd')).subscribe(updateHome);
+
     this.categoryService.list().subscribe({
       next: (categories) => this.categories.set(categories ?? []),
       error: () => this.categories.set([]),

@@ -12,7 +12,7 @@ import type { ArticleCard } from '../../../core/models/article.model';
       <div class="ticker">
         <span class="ticker-label">
           <app-icon name="bell" [size]="15" />
-          خبر فوری
+          {{ title() }}
         </span>
         <div class="ticker-track">
           @for (item of items(); track item._id) {
@@ -30,4 +30,5 @@ import type { ArticleCard } from '../../../core/models/article.model';
 })
 export class BreakingTickerComponent {
   readonly items = input<ArticleCard[]>([]);
+  readonly title = input<string>('خبر فوری');
 }

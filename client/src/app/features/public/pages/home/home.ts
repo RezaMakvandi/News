@@ -10,6 +10,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../../../shared/components/icon/icon';
 import { ArticleCardComponent } from '../../../../shared/components/article-card/article-card';
+import { BreakingTickerComponent } from '../../../../shared/components/breaking-ticker/breaking-ticker';
 import { ProductCardComponent } from '../../../../shared/components/product-card/product-card';
 import { SpinnerComponent } from '../../../../shared/components/spinner/spinner';
 import { ArticleService } from '../../../../core/services/article.service';
@@ -34,6 +35,7 @@ import { FaDatePipe, FaNumberPipe } from '../../../../shared/pipes/format.pipe';
     RouterLink,
     IconComponent,
     ArticleCardComponent,
+    BreakingTickerComponent,
     ProductCardComponent,
     SpinnerComponent,
     FaDatePipe,
@@ -104,6 +106,15 @@ import { FaDatePipe, FaNumberPipe } from '../../../../shared/pipes/format.pipe';
                           }
                         </div>
                       </div>
+                    }
+                  }
+
+                  @case ('breaking_ticker') {
+                    @if (!(section.topTicker || section.top || section.showAtTop || section.topMode || section.fullWidthTop) && articlesFor(section).length) {
+                      <app-breaking-ticker
+                        [items]="articlesFor(section)"
+                        [title]="blockTitle(section)"
+                      />
                     }
                   }
 
@@ -487,6 +498,7 @@ export class HomePage {
         items = data?.latest ?? [];
         break;
       case 'breaking_articles':
+      case 'breaking_ticker':
         items = data?.breaking ?? [];
         break;
       case 'popular_articles':
@@ -531,6 +543,8 @@ export class HomePage {
         return 'پربازدیدترین‌ها';
       case 'breaking_articles':
         return 'خبرهای فوری';
+      case 'breaking_ticker':
+        return section.title?.trim() || 'خبر فوری';
       case 'category_articles':
         return this.categories().find((c) => c.slug === section.categorySlug)?.name ?? 'اخبار دسته';
       case 'tag_articles':
@@ -603,6 +617,7 @@ export class HomePage {
         case 'featured_articles':
         case 'latest_articles':
         case 'breaking_articles':
+        case 'breaking_ticker':
           wantsHeadlines = true;
           break;
         case 'popular_articles':

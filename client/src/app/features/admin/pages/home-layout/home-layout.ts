@@ -293,6 +293,23 @@ import type { ProductCategory } from '../../../../core/models/product.model';
                           </div>
                         }
 
+                        @if (section.type === 'breaking_ticker') {
+                          <div class="row">
+                            <label class="switch">
+                              <input
+                                type="checkbox"
+                                [ngModel]="section.topTicker || section.top || section.showAtTop || section.topMode || section.fullWidthTop"
+                                (ngModelChange)="setProp(section, 'topTicker', $event)"
+                                [ngModelOptions]="{ standalone: true }"
+                              />
+                              <span class="track"></span>
+                            </label>
+                            <span class="text-sm">
+                              نمایش در بالای سایت (حالت قبلی) — بدون فاصله با هدر و عرض تمام صفحه
+                            </span>
+                          </div>
+                        }
+
                         @if (hasCta(section.type)) {
                           <div class="row">
                             <label class="switch">
@@ -760,7 +777,7 @@ export class HomeLayoutPage {
   }
 
   protected hasCta(type: HomeSectionType): boolean {
-    return !['hero', 'html', 'breaking_articles', 'tags_cloud'].includes(type);
+    return !['hero', 'html', 'breaking_articles', 'breaking_ticker', 'tags_cloud'].includes(type);
   }
 
   protected add(type: HomeSectionType): void {

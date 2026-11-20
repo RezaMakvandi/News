@@ -17,6 +17,7 @@ export interface SliderSlide {
 
 export type HomeSectionType =
   | 'hero'
+  | 'breaking_ticker'
   | 'featured_articles'
   | 'latest_articles'
   | 'category_articles'
@@ -78,6 +79,16 @@ export interface HomeSection {
   loop?: boolean;
   /** Auto-advance interval in milliseconds. */
   interval?: number;
+  /** Show the breaking ticker at the top of the site (full width, no gap with header). */
+  topTicker?: boolean;
+  /** Alias for topTicker. */
+  top?: boolean;
+  /** Alias for topTicker. */
+  showAtTop?: boolean;
+  /** Alias for topTicker. */
+  topMode?: boolean;
+  /** Alias for topTicker. */
+  fullWidthTop?: boolean;
 }
 
 export interface HomeSectionDef {
@@ -97,6 +108,13 @@ export const HOME_SECTION_DEFS: HomeSectionDef[] = [
     icon: 'image',
     description: 'خبر ویژه بههمراه چند خبر کنار آن.',
     defaults: {},
+  },
+  {
+    type: 'breaking_ticker',
+    label: 'نوار خبری',
+    icon: 'bell',
+    description: 'نوار خبری زیر هدر سایت (خبرهای فوری).',
+    defaults: { title: 'خبر فوری', limit: 10, showCta: false },
   },
   {
     type: 'featured_articles',
@@ -340,7 +358,13 @@ export function normalizeHomeLayout(value: unknown): HomeSection[] {
   return value
     .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
     .map((item, index) => {
-      const type = String(item['type'] ?? '') as HomeSectionType;
+      const rawType = String(item['type'] ?? '');
+      const aliasMap: Record<string, HomeSectionType> = {
+        ticker: 'breaking_ticker',
+        news_ticker: 'breaking_ticker',
+        breakingTicker: 'breaking_ticker',
+      };
+      const type = (aliasMap[rawType] ?? rawType) as HomeSectionType;
       const def = HOME_SECTION_DEF_MAP[type];
       if (!def) return null;
       return {
