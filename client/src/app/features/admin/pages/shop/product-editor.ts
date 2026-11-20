@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { IconComponent } from '../../../../shared/components/icon/icon';
 import { SpinnerComponent } from '../../../../shared/components/spinner/spinner';
+import { MediaPickerModalComponent } from '../../components/media-picker-modal/media-picker-modal';
 import { ShopService } from '../../../../core/services/shop.service';
 import { SeoService } from '../../../../core/services/seo.service';
 import { ToastService } from '../../../../core/services/toast.service';
@@ -22,11 +23,19 @@ import type {
   ProductSpec,
   ProductVariant,
 } from '../../../../core/models/product.model';
+import type { MediaItem } from '../../../../core/models/media.model';
 import { finalPrice } from '../../../../core/utils/shop';
 
 @Component({
   selector: 'app-product-editor',
-  imports: [FormsModule, RouterLink, IconComponent, SpinnerComponent, FaNumberPipe],
+  imports: [
+    FormsModule,
+    RouterLink,
+    IconComponent,
+    SpinnerComponent,
+    FaNumberPipe,
+    MediaPickerModalComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="admin-page-head">
@@ -298,44 +307,103 @@ import { finalPrice } from '../../../../core/utils/shop';
           <div class="card">
             <div class="card-head">
               <span class="card-title">تصاویر</span>
-              <button type="button" class="btn btn-sm btn-soft" (click)="addImage()">
-                <app-icon name="plus-circle" [size]="14" /> تصویر
+              <button type="button" class="btn btn-sm btn-soft" (click)="pickMedia('gallery')">
+                <app-icon name="image" [size]="14" /> افزودن از کتابخانه
               </button>
             </div>
             <div class="card-body">
-              @if (form.cover) {
-                <img
-                  [src]="form.cover"
-                  alt="cover"
-                  style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:var(--radius);margin-bottom:var(--space-3)"
-                />
-              }
-              @for (image of form.images; track $index) {
-                <div class="row" style="gap:var(--space-2);margin-bottom:var(--space-2)">
+              <div class="field">
+                <label class="label">تصویر اصلی محصول</label>
+                @if (form.cover) {
+                  <img
+                    [src]="form.cover"
+                    alt="cover"
+                    style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:var(--radius);margin-bottom:var(--space-3)"
+                  />
+                }
+                <div class="row" style="gap:var(--space-2)">
                   <input
-                    class="input"
+                    class="input grow"
                     dir="ltr"
-                    placeholder="https://..."
-                    [(ngModel)]="image.url"
-                    [name]="'img' + $index"
-                    (change)="$index === 0 && setCover(image.url)"
+                    placeholder="/uploads/…"
+                    [(ngModel)]="form.cover"
+                    name="cover"
                   />
                   <button
                     type="button"
-                    class="btn btn-ghost btn-icon"
-                    (click)="removeImage($index)"
-                    aria-label="حذف"
+                    class="btn btn-ghost btn-sm"
+                    (click)="pickMedia('cover')"
                   >
-                    <app-icon name="trash" [size]="15" />
+                    <app-icon name="image" [size]="16" /> انتخاب از کتابخانه
                   </button>
                 </div>
-              }
-              @if (!form.images.length) {
-                <p class="text-sm text-muted">تصویری اضافه نشده است.</p>
-              }
+              </div>
+
               <div class="field" style="margin-top:var(--space-3)">
-                <label class="label">آدرس تصویر اصلی</label>
-                <input class="input" dir="ltr" [(ngModel)]="form.cover" name="cover" />
+                <label class="label">گالری تصاویر</label>
+                @for (image of form.images; track $index) {
+                  <div
+                    class="row image-row"
+                    [class.is-cover]="form.cover === image.url"
+                    style="gap:var(--space-2);margin-bottom:var(--space-2);align-items:center"
+                  >
+                    @if (image.url) {
+                      <img
+                        [src]="image.url"
+                        alt=""
+                        style="width:44px;height:44px;object-fit:cover;border-radius:var(--radius-xs);flex:none"
+                      />
+                    }
+                    <input
+                      class="input grow"
+                      dir="ltr"
+                      placeholder="/uploads/…"
+                      [ngModel]="image.url"
+                      (ngModelChange)="updateImageUrl($index, $event)"
+                      [name]="'img' + $index"
+                    />
+                    @if (form.cover === image.url) {
+                      <span class="badge badge-accent" style="white-space:nowrap">
+                        تصویر اصلی
+                      </span>
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-icon"
+                        (click)="setCover(image.url)"
+                        aria-label="انتخاب به عنوان تصویر اصلی"
+                        title="انتخاب به عنوان تصویر اصلی"
+                      >
+                        <app-icon name="star" [size]="15" />
+                      </button>
+                    }
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-icon"
+                      (click)="pickMedia('image', $index)"
+                      aria-label="انتخاب از کتابخانه"
+                      title="انتخاب از کتابخانه"
+                    >
+                      <app-icon name="image" [size]="15" />
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-icon"
+                      (click)="removeImage($index)"
+                      aria-label="حذف"
+                    >
+                      <app-icon name="trash" [size]="15" />
+                    </button>
+                  </div>
+                }
+                @if (!form.images.length) {
+                  <p class="text-sm text-muted">تصویری اضافه نشده است.</p>
+                } @else if (form.images.length > 1 && !form.cover) {
+                  <p class="text-sm" style="color:var(--danger);margin-top:var(--space-2)">
+                    بیش از یک تصویر انتخاب شده است؛ یکی از تصاویر را به عنوان تصویر اصلی مشخص
+                    کنید.
+                  </p>
+                }
               </div>
             </div>
           </div>
@@ -362,10 +430,33 @@ import { finalPrice } from '../../../../core/utils/shop';
         </div>
       </div>
     }
+
+    @if (mediaPickerOpen()) {
+      <app-media-picker-modal
+        [open]="true"
+        mode="image"
+        [multiple]="pickerTarget() === 'gallery'"
+        [title]="
+          pickerTarget() === 'gallery'
+            ? 'انتخاب تصاویر محصول'
+            : pickerTarget() === 'cover'
+              ? 'انتخاب تصویر اصلی محصول'
+              : 'تعویض تصویر محصول'
+        "
+        (picked)="onPickerPicked($event)"
+        (closed)="mediaPickerOpen.set(false)"
+      />
+    }
   `,
   styles: `
     .grid-2 {
       grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    }
+
+    .image-row.is-cover {
+      padding: 4px;
+      border-radius: var(--radius-sm);
+      background: var(--accent-softer);
     }
 
     @media (max-width: 1080px) {
@@ -389,6 +480,10 @@ export class ProductEditorPage {
   protected readonly saving = signal(false);
   protected readonly categories = signal<ProductCategory[]>([]);
   protected readonly brands = signal<Brand[]>([]);
+
+  protected readonly mediaPickerOpen = signal(false);
+  protected readonly pickerTarget = signal<'cover' | 'gallery' | 'image'>('cover');
+  protected readonly pickerImageIndex = signal(0);
 
   protected form: ProductForm = emptyForm();
 
@@ -445,16 +540,73 @@ export class ProductEditorPage {
     this.form.variants.splice(index, 1);
   }
 
-  protected addImage(): void {
-    this.form.images.push({ url: '', alt: this.form.name });
+  protected pickMedia(target: 'cover' | 'gallery' | 'image', imageIndex = 0): void {
+    this.pickerTarget.set(target);
+    this.pickerImageIndex.set(imageIndex);
+    this.mediaPickerOpen.set(true);
   }
 
-  protected removeImage(index: number): void {
-    this.form.images.splice(index, 1);
+  /** Applies the items chosen in the media library to the cover or gallery. */
+  protected onPickerPicked(items: MediaItem[]): void {
+    if (!items.length) return;
+
+    if (this.pickerTarget() === 'cover') {
+      this.applyCover(items[0]);
+    } else if (this.pickerTarget() === 'image') {
+      const image = this.form.images[this.pickerImageIndex()];
+      if (image) {
+        if (this.form.cover === image.url) this.form.cover = items[0].url;
+        image.url = items[0].url;
+      }
+    } else {
+      this.addImages(items);
+    }
+
+    this.mediaPickerOpen.set(false);
   }
 
   protected setCover(url: string): void {
-    this.form.cover = url;
+    if (url) this.form.cover = url;
+  }
+
+  /** Keeps a manually edited gallery URL in sync with the main-image URL. */
+  protected updateImageUrl(index: number, url: string): void {
+    const image = this.form.images[index];
+    if (!image) return;
+    if (this.form.cover === image.url) this.form.cover = url;
+    image.url = url;
+  }
+
+  protected removeImage(index: number): void {
+    const [removed] = this.form.images.splice(index, 1);
+    if (removed && this.form.cover === removed.url) {
+      this.form.cover = this.form.images.length === 1 ? this.form.images[0].url : '';
+    }
+  }
+
+  /** Sets a library item as the main image and keeps it in the gallery. */
+  private applyCover(item: MediaItem): void {
+    this.form.cover = item.url;
+    if (!this.form.images.some((image) => image.url === item.url)) {
+      this.form.images.unshift({ url: item.url, alt: item.alt || this.form.name });
+    }
+  }
+
+  /** Adds picked gallery images without duplicates; a lone image becomes the main one. */
+  private addImages(items: MediaItem[]): void {
+    if (this.form.cover && !this.form.images.some((image) => image.url === this.form.cover)) {
+      this.form.images.unshift({ url: this.form.cover, alt: this.form.name });
+    }
+
+    for (const item of items) {
+      if (!this.form.images.some((image) => image.url === item.url)) {
+        this.form.images.push({ url: item.url, alt: item.alt || this.form.name });
+      }
+    }
+
+    if (!this.form.cover && this.form.images.length === 1) {
+      this.form.cover = this.form.images[0].url;
+    }
   }
 
   protected save(): void {
@@ -468,6 +620,12 @@ export class ProductEditorPage {
     }
     if (!this.form.price || this.form.price <= 0) {
       this.toast.warning('قیمت محصول را وارد کنید');
+      return;
+    }
+
+    const images = this.form.images.filter((image) => image.url.trim());
+    if (images.length > 1 && !images.some((image) => image.url === this.form.cover)) {
+      this.toast.warning('یکی از تصاویر محصول را به عنوان تصویر اصلی انتخاب کنید');
       return;
     }
 
@@ -599,12 +757,17 @@ function toForm(product: ProductWithRefs): ProductForm {
 }
 
 function cleanPayload(form: ProductForm): ProductPayload {
+  const images = form.images.filter((image) => image.url.trim());
+  if (form.cover && !images.some((image) => image.url === form.cover)) {
+    images.unshift({ url: form.cover, alt: form.name });
+  }
+
   return {
     ...form,
     status: form.status as ProductPayload['status'],
     slug: form.slug || undefined,
     brand: form.brand || null,
-    images: form.images.filter((image) => image.url.trim()),
+    images,
     variants: form.variants.filter((variant) => variant.name.trim() && variant.value.trim()),
     specs: form.specs.filter((spec) => spec.name.trim() && spec.value.trim()),
   };

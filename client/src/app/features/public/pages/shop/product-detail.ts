@@ -77,9 +77,9 @@ import {
                 </div>
               }
             </div>
-            @if (item.images.length > 1) {
+            @if (galleryImages().length > 1) {
               <div class="gallery-thumbs">
-                @for (image of item.images; track $index) {
+                @for (image of galleryImages(); track $index) {
                   <button
                     type="button"
                     [class.is-active]="activeIndex() === $index"
@@ -479,8 +479,18 @@ export class ProductDetailPage {
   protected readonly discount = computed(() =>
     this.product() ? discountPercent(this.product()!) : 0,
   );
+  /** All gallery images, including the main image when it is not part of `images`. */
+  protected readonly galleryImages = computed(() => {
+    const item = this.product();
+    if (!item) return [];
+    const images = item.images ?? [];
+    if (item.cover && !images.some((image) => image.url === item.cover)) {
+      return [{ url: item.cover, alt: item.name }, ...images];
+    }
+    return images;
+  });
   protected readonly activeImage = computed(() => {
-    const images = this.product()?.images ?? [];
+    const images = this.galleryImages();
     return images[this.activeIndex()]?.url ?? this.product()?.cover ?? '';
   });
   protected readonly histogram = computed(() => this.data()?.ratingHistogram ?? {});

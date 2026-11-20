@@ -346,6 +346,12 @@
   }
 }
 
+@media (max-width: 900px) {
+  .product-gallery {
+    position: static;
+  }
+}
+
 .product-info {
   display: flex;
   flex-direction: column;
