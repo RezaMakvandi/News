@@ -27,7 +27,11 @@ import { USER_ROLE_LABELS } from '../../../core/models/user.model';
     <header class="site-header" [class.is-scrolled]="scrolled()">
       <div class="container header-inner">
         <a class="brand" routerLink="/" aria-label="صفحه اصلی">
-          <span class="brand-mark">{{ siteInitial() }}</span>
+          @if (siteLogo()) {
+            <img class="brand-logo" [src]="siteLogo()" [alt]="siteName()" />
+          } @else {
+            <span class="brand-mark">{{ siteInitial() }}</span>
+          }
           <span class="brand-text">
             <span class="brand-name">{{ siteName() }}</span>
             <span class="brand-tag">{{ siteTagline() }}</span>
@@ -533,6 +537,9 @@ export class SiteHeaderComponent {
     () => (this.settings.settings()['siteTagline'] as string) || 'رسانه فناوری',
   );
   protected readonly siteInitial = computed(() => this.siteName().charAt(0));
+  protected readonly siteLogo = computed(
+    () => (this.settings.settings()['siteLogo'] as string) || '',
+  );
 
   /** Top-level menu tree from settings, or null to fall back to categories. */
   protected readonly menuTree = computed(() => {

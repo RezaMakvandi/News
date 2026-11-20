@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../../../shared/components/icon/icon';
 import { SpinnerComponent } from '../../../../shared/components/spinner/spinner';
 import { FooterEditorComponent } from '../../components/footer-editor/footer-editor';
+import { MediaPickerModalComponent } from '../../components/media-picker-modal/media-picker-modal';
+import type { MediaItem } from '../../../../core/models/media.model';
 import { AdminService } from '../../../../core/services/admin.service';
 import { SettingsService } from '../../../../core/services/settings.service';
 import { SeoService } from '../../../../core/services/seo.service';
@@ -31,7 +33,7 @@ interface SettingRow {
 
 @Component({
   selector: 'app-settings-page',
-  imports: [FormsModule, IconComponent, SpinnerComponent, FooterEditorComponent],
+  imports: [FormsModule, IconComponent, SpinnerComponent, FooterEditorComponent, MediaPickerModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="admin-page-head">
@@ -124,6 +126,37 @@ interface SettingRow {
                       [ngModel]="asString(item.value)"
                       (ngModelChange)="setValue(item.key, $event)"
                     ></textarea>
+                  } @else if (item.key === 'siteLogo') {
+                    <label class="label">{{ item.label }}</label>
+                    <div class="media-row">
+                      @if (asString(item.value)) {
+                        <img class="logo-preview" [src]="asString(item.value)" alt="لوگوی سایت" />
+                      } @else {
+                        <span class="logo-placeholder">
+                          <app-icon name="image" [size]="22" />
+                        </span>
+                      }
+                      <div class="grow">
+                        <input
+                          class="input"
+                          dir="ltr"
+                          placeholder="https://… یا /api/media/…"
+                          [ngModel]="asString(item.value)"
+                          (ngModelChange)="setValue(item.key, $event)"
+                        />
+                        <div class="row-actions">
+                          <button type="button" class="btn btn-ghost btn-sm" (click)="openLogoPicker()">
+                            <app-icon name="image" [size]="14" />
+                            انتخاب از رسانه
+                          </button>
+                          @if (asString(item.value)) {
+                            <button type="button" class="btn btn-danger-soft btn-sm" (click)="setValue(item.key, '')">
+                              حذف
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    </div>
                   } @else if (item.key === 'homePage') {
                     <label class="label">{{ item.label }}</label>
                     <select
@@ -262,6 +295,16 @@ interface SettingRow {
         </button>
       </div>
     }
+
+    @if (mediaPickerOpen()) {
+      <app-media-picker-modal
+        [open]="true"
+        mode="image"
+        title="انتخاب لوگوی سایت"
+        (picked)="onLogoPicked($event)"
+        (closed)="mediaPickerOpen.set(false)"
+      />
+    }
   `,
   styles: `
     .settings-tabs {
@@ -332,6 +375,43 @@ interface SettingRow {
       letter-spacing: 0.02em;
     }
 
+    .media-row {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+    }
+
+    .logo-preview,
+    .logo-placeholder {
+      width: 96px;
+      height: 64px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-inset);
+      object-fit: contain;
+      display: grid;
+      place-items: center;
+      color: var(--text-faint);
+      flex: 0 0 auto;
+    }
+
+    .logo-preview {
+      background: #fff;
+      padding: 6px;
+    }
+
+    .grow {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .row-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-2);
+    }
+
     @media (max-width: 900px) {
       .settings-grid {
         grid-template-columns: 1fr;
@@ -352,6 +432,7 @@ export class SettingsPage {
   protected readonly items = signal<SettingRow[]>([]);
   protected readonly settingsTab = signal<'general' | 'footer' | 'shop'>('general');
   protected readonly footerDraft = signal<FooterConfig>(DEFAULT_FOOTER_CONFIG);
+  protected readonly mediaPickerOpen = signal(false);
 
   private readonly dirty = new Map<string, unknown>();
 
@@ -578,6 +659,17 @@ export class SettingsPage {
         this.toast.error(error.message || 'ارسال پیامک آزمایشی ناموفق بود');
       },
     });
+  }
+
+  protected openLogoPicker(): void {
+    this.mediaPickerOpen.set(true);
+  }
+
+  protected onLogoPicked(items: MediaItem[]): void {
+    const item = items[0];
+    this.mediaPickerOpen.set(false);
+    if (!item) return;
+    this.setValue('siteLogo', item.url);
   }
 
   protected save(): void {

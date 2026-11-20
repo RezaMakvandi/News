@@ -44,6 +44,14 @@
     box-shadow: 0 4px 14px var(--accent-ring);
   }
 
+  .brand-logo {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    border-radius: 11px;
+    flex-shrink: 0;
+  }
+
   .brand-text {
     display: flex;
     flex-direction: column;
