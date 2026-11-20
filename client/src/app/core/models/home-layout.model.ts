@@ -6,6 +6,15 @@
  * the public home page — including blocks that surface shop products.
  */
 
+export interface SliderSlide {
+  /** Image URL for the slide. */
+  image: string;
+  /** Optional link opened when the slide is clicked. */
+  link?: string;
+  /** Alt text for the image. */
+  alt?: string;
+}
+
 export type HomeSectionType =
   | 'hero'
   | 'featured_articles'
@@ -19,7 +28,9 @@ export type HomeSectionType =
   | 'tags_cloud'
   | 'shop_banner'
   | 'newsletter'
-  | 'html';
+  | 'html'
+  | 'image_slider'
+  | 'slider';
 
 export type HomeSectionCols = 1 | 2 | 3 | 4;
 
@@ -61,6 +72,12 @@ export interface HomeSection {
   ctaHref?: string;
   /** Raw HTML for the `html` block. */
   html?: string;
+  /** Slides for the `image_slider` block. */
+  slides?: SliderSlide[];
+  /** Whether the slider loops automatically. */
+  loop?: boolean;
+  /** Auto-advance interval in milliseconds. */
+  interval?: number;
 }
 
 export interface HomeSectionDef {
@@ -212,6 +229,13 @@ export const HOME_SECTION_DEFS: HomeSectionDef[] = [
     description: 'بلوک HTML آزاد برای بنر یا متن دلخواه.',
     defaults: { html: '' },
   },
+  {
+    type: 'image_slider',
+    label: 'اسلایدر تصویر',
+    icon: 'image',
+    description: 'نمایش چند تصویر به صورت لوپ با امکان لینک برای هر تصویر.',
+    defaults: { slides: [], loop: true, interval: 4000 },
+  },
 ];
 
 export const HOME_SECTION_DEF_MAP: Record<string, HomeSectionDef> = Object.fromEntries(
@@ -334,3 +358,75 @@ export function normalizeHomeLayout(value: unknown): HomeSection[] {
 export function hasHomeLayout(value: unknown): boolean {
   return normalizeHomeLayout(value).length > 0;
 }
+
+/** Default layout for the store (shop) home page. */
+export const SHOP_HOME_LAYOUT_DEFAULT: HomeSection[] = [
+  {
+    id: 'shop_banner',
+    type: 'shop_banner',
+    enabled: true,
+    width: 12,
+    ...HOME_SECTION_DEF_MAP['shop_banner'].defaults,
+  },
+  {
+    id: 'product_categories',
+    type: 'product_categories',
+    enabled: true,
+    width: 12,
+    ...HOME_SECTION_DEF_MAP['product_categories'].defaults,
+  },
+  {
+    id: 'featured_products',
+    type: 'products',
+    enabled: true,
+    width: 12,
+    title: 'پیشنهاد ویژه',
+    limit: 4,
+    columns: 4,
+    featured: true,
+    sort: 'newest',
+    showCta: true,
+    ctaLabel: 'مشاهده همه',
+    ctaHref: '/shop/products',
+  },
+  {
+    id: 'sale_products',
+    type: 'products',
+    enabled: true,
+    width: 12,
+    title: 'تخفیفدارها',
+    limit: 4,
+    columns: 4,
+    onSale: true,
+    sort: 'newest',
+    showCta: true,
+    ctaLabel: 'مشاهده همه',
+    ctaHref: '/shop/products',
+  },
+  {
+    id: 'best_sellers',
+    type: 'products',
+    enabled: true,
+    width: 12,
+    title: 'پرفروشترینها',
+    limit: 4,
+    columns: 4,
+    sort: 'popular',
+    showCta: true,
+    ctaLabel: 'مشاهده همه',
+    ctaHref: '/shop/products',
+  },
+  {
+    id: 'latest_products',
+    type: 'products',
+    enabled: true,
+    width: 12,
+    title: 'جدیدترین محصولات',
+    limit: 4,
+    columns: 4,
+    sort: 'newest',
+    showCta: true,
+    ctaLabel: 'مشاهده همه',
+    ctaHref: '/shop/products',
+  },
+];

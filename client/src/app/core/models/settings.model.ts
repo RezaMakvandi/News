@@ -60,8 +60,10 @@ export interface PublicSettings {
   shopEnabled?: boolean;
   themeDefault?: 'light' | 'dark';
   accentColor?: string;
-  /** Ordered home page blocks (see `home-layout.model`). */
+  /** Ordered news home page blocks (see `home-layout.model`). */
   homeLayout?: unknown;
+  /** Ordered store (shop) home page blocks (see `home-layout.model`). */
+  shopHomeLayout?: unknown;
   [key: string]: unknown;
 }
 
@@ -115,7 +117,7 @@ export const SETTING_COLOR_KEYS = new Set(['accentColor']);
 export const SETTING_SECRET_KEYS = new Set(['smtpPass', 'smsPassword']);
 
 /** Keys edited by a dedicated screen, hidden from the generic settings form. */
-export const SETTING_MANAGED_KEYS = new Set(['homeLayout', 'menuItems', 'footerConfig']);
+export const SETTING_MANAGED_KEYS = new Set(['homeLayout', 'shopHomeLayout', 'menuItems', 'footerConfig']);
 
 export interface Page {
   _id: string;

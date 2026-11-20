@@ -42,9 +42,9 @@ import type { ProductCategory } from '../../../../core/models/product.model';
   template: `
     <div class="admin-page-head">
       <div>
-        <h1>چیدمان صفحه اصلی</h1>
+        <h1>چیدمان صفحه اصلی خبری</h1>
         <p class="text-sm text-muted">
-          با کشیدن و رها کردن، ترتیب و نمایش بخشهای صفحه اصلی را شخصیسازی کنید؛ حتی میتوانید کالاهای
+          با کشیدن و رها کردن، ترتیب و نمایش بخشهای صفحه اصلی خبری را شخصیسازی کنید؛ حتی میتوانید کالاهای
           فروشگاه را در صفحه اصلی قرار دهید.
         </p>
       </div>
@@ -671,7 +671,7 @@ export class HomeLayoutPage {
   protected readonly productCategories = signal<ProductCategory[]>([]);
 
   constructor() {
-    this.seo.set({ title: 'چیدمان صفحه اصلی | پنل مدیریت' });
+    this.seo.set({ title: 'چیدمان صفحه اصلی خبری | پنل مدیریت' });
 
     this.settingsService.load().subscribe({
       next: () => {

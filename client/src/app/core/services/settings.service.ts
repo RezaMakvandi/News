@@ -28,9 +28,15 @@ export class SettingsService {
   private load$: Observable<PublicSettings> | null = null;
   private loaded = false;
 
-  /** Ordered home page blocks, falling back to the built-in default layout. */
+  /** Ordered news home page blocks, falling back to the built-in default layout. */
   readonly homeLayout = computed<HomeSection[]>(() => {
     const configured = normalizeHomeLayout(this.settingsSignal()['homeLayout']);
+    return configured.length ? configured : HOME_LAYOUT_DEFAULT;
+  });
+
+  /** Ordered store (shop) home page blocks, falling back to the built-in default layout. */
+  readonly shopHomeLayout = computed<HomeSection[]>(() => {
+    const configured = normalizeHomeLayout(this.settingsSignal()['shopHomeLayout']);
     return configured.length ? configured : HOME_LAYOUT_DEFAULT;
   });
 
@@ -85,6 +91,11 @@ export class SettingsService {
   /** PUT /api/admin/settings — persists the ordered home layout. */
   saveHomeLayout(layout: HomeSection[]): Observable<SettingItem[]> {
     return this.adminSave([{ key: 'homeLayout', value: layout }]);
+  }
+
+  /** PUT /api/admin/settings — persists the ordered store (shop) home layout. */
+  saveShopHomeLayout(layout: HomeSection[]): Observable<SettingItem[]> {
+    return this.adminSave([{ key: 'shopHomeLayout', value: layout }]);
   }
 
   /** PUT /api/admin/settings — persists the footer layout. */

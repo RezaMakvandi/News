@@ -405,7 +405,16 @@ export const DEFAULT_SETTINGS: Record<
       group:
         "appearance",
       label:
-        "چیدمان صفحه اصلی",
+        "چیدمان صفحه اصلی خبری",
+    },
+  shopHomeLayout:
+    {
+      value:
+        [],
+      group:
+        "appearance",
+      label:
+        "چیدمان صفحه اصلی فروشگاه",
     },
   /* ------------------------------ Mail ------------------------------- */
   adminEmail:

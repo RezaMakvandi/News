@@ -125,7 +125,25 @@ export const routes: Routes = [
         canActivate: [adminGuard],
         loadComponent: () =>
           import('./features/admin/pages/home-layout/home-layout').then((m) => m.HomeLayoutPage),
-        title: 'چیدمان صفحه اصلی | پنل مدیریت',
+        title: 'چیدمان صفحه اصلی خبری | پنل مدیریت',
+      },
+      {
+        path: 'shop/home-layout',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./features/admin/pages/shop-home-layout/shop-home-layout').then(
+            (m) => m.ShopHomeLayoutPage,
+          ),
+        title: 'چیدمان صفحه اصلی فروشگاه | پنل مدیریت',
+      },
+      {
+        path: 'shop-home-layout',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./features/admin/pages/shop-home-layout/shop-home-layout').then(
+            (m) => m.ShopHomeLayoutPage,
+          ),
+        title: 'چیدمان صفحه اصلی فروشگاه | پنل مدیریت',
       },
       {
         path: 'menus',
