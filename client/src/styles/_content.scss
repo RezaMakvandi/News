@@ -179,9 +179,12 @@
     align-items: center;
     gap: var(--space-5);
     padding: 0 var(--space-4);
-    overflow-x: auto;
+    overflow: hidden;
+    flex: 1 1 auto;
+    min-width: 0;
     scrollbar-width: none;
     white-space: nowrap;
+    animation: marquee-rtl 30s linear infinite;
 
     &::-webkit-scrollbar { display: none; }
   }

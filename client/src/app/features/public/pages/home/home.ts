@@ -114,6 +114,7 @@ import { FaDatePipe, FaNumberPipe } from '../../../../shared/pipes/format.pipe';
                       <app-breaking-ticker
                         [items]="articlesFor(section)"
                         [title]="blockTitle(section)"
+                        [animated]="section.animated ?? section.marquee ?? section.scrolling ?? section.autoScroll ?? true"
                       />
                     }
                   }

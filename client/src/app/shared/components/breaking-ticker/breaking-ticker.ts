@@ -14,8 +14,11 @@ import type { ArticleCard } from '../../../core/models/article.model';
           <app-icon name="bell" [size]="15" />
           {{ title() }}
         </span>
-        <div class="ticker-track">
+        <div class="ticker-track" [style.animation]="animated() ? '' : 'none'">
           @for (item of items(); track item._id) {
+            <a class="ticker-item" [routerLink]="['/news', item.slug]">{{ item.title }}</a>
+          }
+          @for (item of items(); track item._id + '_dup') {
             <a class="ticker-item" [routerLink]="['/news', item.slug]">{{ item.title }}</a>
           }
         </div>
@@ -31,4 +34,5 @@ import type { ArticleCard } from '../../../core/models/article.model';
 export class BreakingTickerComponent {
   readonly items = input<ArticleCard[]>([]);
   readonly title = input<string>('خبر فوری');
+  readonly animated = input<boolean>(true);
 }

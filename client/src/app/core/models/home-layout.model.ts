@@ -89,6 +89,14 @@ export interface HomeSection {
   topMode?: boolean;
   /** Alias for topTicker. */
   fullWidthTop?: boolean;
+  /** Animate the ticker items (marquee). */
+  animated?: boolean;
+  /** Alias for animated. */
+  marquee?: boolean;
+  /** Alias for animated. */
+  scrolling?: boolean;
+  /** Alias for animated. */
+  autoScroll?: boolean;
 }
 
 export interface HomeSectionDef {

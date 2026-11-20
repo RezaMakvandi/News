@@ -310,6 +310,21 @@ import type { ProductCategory } from '../../../../core/models/product.model';
                           </div>
                         }
 
+                        @if (section.type === 'breaking_ticker') {
+                          <div class="row">
+                            <label class="switch">
+                              <input
+                                type="checkbox"
+                                [ngModel]="section.animated ?? section.marquee ?? section.scrolling ?? section.autoScroll ?? true"
+                                (ngModelChange)="setProp(section, 'animated', $event)"
+                                [ngModelOptions]="{ standalone: true }"
+                              />
+                              <span class="track"></span>
+                            </label>
+                            <span class="text-sm">متحرک (حرکت از چپ به راست)</span>
+                          </div>
+                        }
+
                         @if (hasCta(section.type)) {
                           <div class="row">
                             <label class="switch">

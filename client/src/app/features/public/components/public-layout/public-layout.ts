@@ -30,7 +30,7 @@ import type { Page } from '../../../../core/models/settings.model';
 
     <app-site-header [categories]="categories()" />
     @if (globalTickerEnabled()) {
-      <app-breaking-ticker [items]="breaking()" />
+      <app-breaking-ticker [items]="breaking()" [animated]="globalTickerAnimated()" />
     }
 
     <main id="main-content">
@@ -145,6 +145,18 @@ export class PublicLayoutComponent {
     );
     if (!hasTopTicker) return false;
     return true;
+  });
+
+  protected readonly globalTickerAnimated = computed(() => {
+    const layout = this.settingsService.homeLayout();
+    const section = layout.find(
+      (s) =>
+        s.type === 'breaking_ticker' &&
+        s.enabled !== false &&
+        !!(s.topTicker || s.top || s.showAtTop || s.topMode || s.fullWidthTop),
+    );
+    if (!section) return true;
+    return !!(section.animated ?? section.marquee ?? section.scrolling ?? section.autoScroll ?? true);
   });
 
   constructor() {
