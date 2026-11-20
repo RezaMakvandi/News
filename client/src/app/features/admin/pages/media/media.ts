@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { concat, type Observable } from 'rxjs';
+import { concat, firstValueFrom, type Observable } from 'rxjs';
 import { ChunkedUploadService } from '../../../../core/services/chunked-upload.service';
 import { IconComponent } from '../../../../shared/components/icon/icon';
 import { SpinnerComponent } from '../../../../shared/components/spinner/spinner';
@@ -9,6 +9,7 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { ModalComponent } from '../../../../shared/components/modal/modal';
 import { MediaService } from '../../../../core/services/media.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { SeoService } from '../../../../core/services/seo.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import type { MediaItem } from '../../../../core/models/media.model';
@@ -40,10 +41,18 @@ const isVideoFile = (file: File): boolean =>
         <h1>کتابخانه رسانه</h1>
         <p class="text-sm text-muted">مدیریت تصاویر و فایل‌های آپلود شده.</p>
       </div>
-      <button type="button" class="btn btn-primary" (click)="uploadInput.click()">
-        <app-icon name="upload" [size]="18" />
-        آپلود فایل
-      </button>
+      <div class="row" style="gap: var(--space-2)">
+        @if (auth.role() === 'admin') {
+          <button type="button" class="btn btn-ghost" (click)="openNewFolder()">
+            <app-icon name="folder" [size]="18" />
+            پوشه جدید
+          </button>
+        }
+        <button type="button" class="btn btn-primary" (click)="uploadInput.click()">
+          <app-icon name="upload" [size]="18" />
+          آپلود فایل
+        </button>
+      </div>
     </div>
 
     <input
@@ -55,15 +64,19 @@ const isVideoFile = (file: File): boolean =>
       (change)="onFilesSelected($event)"
     />
 
+    @if (currentFolder()) {
+      <div class="row" style="margin-bottom: var(--space-4); gap: var(--space-2); align-items: center">
+        <button type="button" class="btn btn-ghost btn-sm" (click)="goRoot()">
+          <app-icon name="arrow-right" [size]="16" />
+          همه پوشه‌ها
+        </button>
+        <span class="text-muted">/</span>
+        <strong>{{ currentFolder() }}</strong>
+      </div>
+    }
+
     <div class="filter-bar">
       <div class="row wrap">
-        <select class="select" [ngModel]="folder()" (ngModelChange)="setFolder($event)">
-          <option value="">همه پوشه‌ها</option>
-          @for (item of folders(); track item) {
-            <option [value]="item">{{ item }}</option>
-          }
-        </select>
-
         <select class="select" [ngModel]="type()" (ngModelChange)="setType($event)">
           <option value="">همه نوع‌ها</option>
           <option value="image">تصویر</option>
@@ -102,7 +115,31 @@ const isVideoFile = (file: File): boolean =>
     }
 
     @if (loading()) {
-      <app-spinner label="در حال بارگذاری فایل‌ها…" />
+      <app-spinner label="در حال بارگذاری…" />
+    } @else if (currentFolder() === null && !searchTerm().trim() && folders().length) {
+      <div class="media-grid">
+        @for (item of folders(); track item) {
+          <div class="media-item card" (click)="openFolder(item)" style="cursor: pointer; position: relative">
+            @if (auth.role() === 'admin') {
+              <div style="position: absolute; top: 8px; inset-inline-end: 8px; display: flex; gap: 4px; z-index: 2">
+                <button type="button" class="btn btn-ghost btn-icon btn-sm" (click)="openEditFolder(item, $event)" aria-label="ویرایش نام پوشه">
+                  <app-icon name="edit" [size]="14" />
+                </button>
+                <button type="button" class="btn btn-ghost btn-icon btn-sm" (click)="confirmDeleteFolder(item, $event)" aria-label="حذف پوشه">
+                  <app-icon name="trash" [size]="14" />
+                </button>
+              </div>
+            }
+            <div class="media-placeholder">
+              <app-icon name="folder" [size]="48" />
+            </div>
+            <div class="media-info">
+              <p class="media-name clamp-1">{{ item }}</p>
+              <p class="text-xs text-faint">پوشه</p>
+            </div>
+          </div>
+        }
+      </div>
     } @else if (!items().length) {
       <app-empty-state
         icon="image"
@@ -211,6 +248,70 @@ const isVideoFile = (file: File): boolean =>
       </app-modal>
     }
 
+    @if (newFolderOpen()) {
+      <app-modal [open]="true" title="پوشه جدید" (closed)="newFolderOpen.set(false)">
+        <div class="field">
+          <label class="label">نام پوشه</label>
+          <input
+            class="input"
+            [ngModel]="newFolderName()"
+            (ngModelChange)="newFolderName.set($event)"
+            name="newFolderName"
+            placeholder="مثلاً تصاویر محصولات"
+          />
+        </div>
+        <div modalFooter>
+          <button type="button" class="btn btn-ghost" (click)="newFolderOpen.set(false)">بستن</button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="createFolder()"
+            [disabled]="creatingFolder() || !newFolderName().trim()"
+          >
+            @if (creatingFolder()) {
+              <span class="spinner spinner-sm"></span>
+            }
+            ایجاد پوشه
+          </button>
+        </div>
+      </app-modal>
+    }
+
+    @if (editFolderOpen()) {
+      <app-modal [open]="true" title="ویرایش پوشه" (closed)="editFolderOpen.set(false)">
+        <div class="field">
+          <label class="label">نام پوشه</label>
+          <input
+            class="input"
+            [ngModel]="editFolderName()"
+            (ngModelChange)="editFolderName.set($event)"
+            name="editFolderName"
+          />
+        </div>
+        <div modalFooter>
+          <button type="button" class="btn btn-ghost" (click)="editFolderOpen.set(false)">بستن</button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="saveEditFolder()"
+            [disabled]="savingFolder() || !editFolderName().trim()"
+          >
+            @if (savingFolder()) { <span class="spinner spinner-sm"></span> }
+            ذخیره
+          </button>
+        </div>
+      </app-modal>
+    }
+
+    <app-confirm-dialog
+      [open]="folderConfirmOpen()"
+      title="حذف پوشه"
+      [message]="folderToDelete() ? 'پوشه «' + folderToDelete()!.name + '» حذف می‌شود. در صورت خالی بودن حذف انجام می‌شود.' : ''"
+      [busy]="deletingFolder()"
+      (confirm)="performDeleteFolder()"
+      (cancel)="folderConfirmOpen.set(false)"
+    />
+
     <app-confirm-dialog
       [open]="confirmOpen()"
       title="حذف فایل"
@@ -294,6 +395,7 @@ const isVideoFile = (file: File): boolean =>
 })
 export class MediaPage {
   private readonly mediaService = inject(MediaService);
+  protected readonly auth = inject(AuthService);
   private readonly chunkedUpload = inject(ChunkedUploadService);
   private readonly toast = inject(ToastService);
   private readonly seo = inject(SeoService);
@@ -304,9 +406,25 @@ export class MediaPage {
   protected readonly items = signal<MediaItem[]>([]);
   protected readonly folders = signal<string[]>([]);
   protected readonly page = signal(1);
+
+  protected readonly newFolderOpen = signal(false);
+  protected readonly newFolderName = signal('');
+  protected readonly creatingFolder = signal(false);
   protected readonly totalPages = signal(1);
 
   protected readonly folder = signal('');
+  protected readonly currentFolder = signal<string | null>(null);
+  protected readonly folderDocs = signal<{ _id: string; name: string }[]>([]);
+
+  protected readonly editFolderOpen = signal(false);
+  protected readonly editFolderId = signal('');
+  protected readonly editFolderName = signal('');
+  protected readonly editFolderOriginalName = signal('');
+  protected readonly savingFolder = signal(false);
+
+  protected readonly folderConfirmOpen = signal(false);
+  protected readonly folderToDelete = signal<{ _id: string; name: string } | null>(null);
+  protected readonly deletingFolder = signal(false);
   protected readonly type = signal<'image' | 'video' | ''>('');
   protected readonly searchTerm = signal('');
 
@@ -328,6 +446,129 @@ export class MediaPage {
     this.folder.set(value);
     this.page.set(1);
     this.load();
+  }
+
+  protected openFolder(name: string): void {
+    this.currentFolder.set(name);
+    this.folder.set(name);
+    this.page.set(1);
+    this.load();
+  }
+
+  protected goRoot(): void {
+    this.currentFolder.set(null);
+    this.folder.set('');
+    this.page.set(1);
+    this.load();
+  }
+
+  protected folderDoc(name: string): { _id: string; name: string } | undefined {
+    return this.folderDocs().find((doc) => doc.name === name);
+  }
+
+  protected async openEditFolder(name: string, event?: Event): Promise<void> {
+    event?.stopPropagation();
+    if (!this.folderDocs().length) {
+      try {
+        const docs = await firstValueFrom(this.mediaService.listFolders());
+        this.folderDocs.set(docs ?? []);
+      } catch {
+        this.folderDocs.set([]);
+      }
+    }
+    const doc = this.folderDoc(name);
+    if (!doc) return;
+    this.editFolderId.set(doc._id);
+    this.editFolderName.set(doc.name);
+    this.editFolderOriginalName.set(doc.name);
+    this.editFolderOpen.set(true);
+  }
+
+  protected saveEditFolder(): void {
+    const id = this.editFolderId();
+    const name = this.editFolderName().trim();
+    if (!id || !name) return;
+    this.savingFolder.set(true);
+    this.mediaService.updateFolder(id, name).subscribe({
+      next: (updated) => {
+        this.savingFolder.set(false);
+        this.editFolderOpen.set(false);
+        const newName = updated?.name || name;
+        const oldName = this.editFolderOriginalName();
+        this.folders.update((list) =>
+          list.map((item) => (item === oldName ? newName : item)),
+        );
+        if (this.currentFolder() === oldName) this.currentFolder.set(newName);
+        this.toast.success('پوشه به‌روزرسانی شد');
+        this.load();
+      },
+      error: (error: Error) => {
+        this.savingFolder.set(false);
+        this.toast.error(error.message || 'به‌روزرسانی انجام نشد');
+      },
+    });
+  }
+
+  protected async confirmDeleteFolder(name: string, event?: Event): Promise<void> {
+    event?.stopPropagation();
+    if (!this.folderDocs().length) {
+      try {
+        const docs = await firstValueFrom(this.mediaService.listFolders());
+        this.folderDocs.set(docs ?? []);
+      } catch {
+        this.folderDocs.set([]);
+      }
+    }
+    const doc = this.folderDoc(name);
+    if (!doc) return;
+    this.folderToDelete.set(doc);
+    this.folderConfirmOpen.set(true);
+  }
+
+  protected performDeleteFolder(): void {
+    const target = this.folderToDelete();
+    if (!target) return;
+    this.deletingFolder.set(true);
+    this.mediaService.removeFolder(target._id).subscribe({
+      next: () => {
+        this.deletingFolder.set(false);
+        this.folderConfirmOpen.set(false);
+        this.folderToDelete.set(null);
+        this.folders.update((list) => list.filter((item) => item !== target.name));
+        if (this.currentFolder() === target.name) this.goRoot();
+        this.toast.success('پوشه حذف شد');
+        this.load();
+      },
+      error: (error: Error) => {
+        this.deletingFolder.set(false);
+        this.toast.error(error.message || 'حذف انجام نشد');
+      },
+    });
+  }
+
+  protected openNewFolder(): void {
+    this.newFolderName.set('');
+    this.newFolderOpen.set(true);
+  }
+
+  protected createFolder(): void {
+    const name = this.newFolderName().trim();
+    if (!name) return;
+    this.creatingFolder.set(true);
+    this.mediaService.createFolder(name).subscribe({
+      next: (created) => {
+        this.creatingFolder.set(false);
+        this.newFolderOpen.set(false);
+        const folderName = created?.name || name;
+        this.folders.update((list) => (list.includes(folderName) ? list : [...list, folderName].sort()));
+        this.toast.success('پوشه ایجاد شد');
+        if (this.currentFolder() === null) this.load();
+      },
+      error: (error: Error) => {
+        this.creatingFolder.set(false);
+        this.toast.error(error.message || 'ایجاد پوشه انجام نشد');
+      },
+    });
   }
 
   protected setType(value: 'image' | 'video' | ''): void {
@@ -352,7 +593,7 @@ export class MediaPage {
     input.value = '';
     if (!files.length) return;
 
-    const folder = this.folder() || 'general';
+    const folder = this.currentFolder() || 'general';
     // Videos go through the resumable chunked uploader (they easily exceed
     // the 12 MB multipart cap); everything else keeps the fast batch path.
     const chunkedFiles = files.filter(isVideoFile);
@@ -468,18 +709,25 @@ export class MediaPage {
 
   private load(): void {
     this.loading.set(true);
+    const folder = this.currentFolder();
     this.mediaService
       .list({
         page: this.page(),
         limit: 24,
-        folder: this.folder(),
+        ...(folder ? { folder } : {}),
         type: this.type(),
         q: this.searchTerm().trim(),
       })
       .subscribe({
         next: (result) => {
           this.items.set(result.items ?? []);
-          this.folders.set(result.meta?.folders ?? []);
+          if (folder === null) {
+            this.folders.set(result.meta?.folders ?? []);
+            this.mediaService.listFolders().subscribe({
+              next: (docs) => this.folderDocs.set(docs ?? []),
+              error: () => this.folderDocs.set([]),
+            });
+          }
           this.totalPages.set(Math.max(1, result.meta?.totalPages ?? 1));
           this.loading.set(false);
         },

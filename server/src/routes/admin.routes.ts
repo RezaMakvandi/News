@@ -362,6 +362,32 @@ router.delete(
   media.remove,
 );
 
+router.get(
+  "/media/folders",
+  media.listFolders,
+);
+router.post(
+  "/media/folders",
+  requireRole(
+    "admin",
+  ),
+  media.createFolder,
+);
+router.put(
+  "/media/folders/:id",
+  requireRole(
+    "admin",
+  ),
+  media.updateFolder,
+);
+router.delete(
+  "/media/folders/:id",
+  requireRole(
+    "admin",
+  ),
+  media.removeFolder,
+);
+
 /* ------------------- Chunked uploads (large videos) --------------------- */
 router.get(
   "/media/uploads/:uploadId/status",

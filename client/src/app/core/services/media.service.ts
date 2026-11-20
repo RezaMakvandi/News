@@ -32,4 +32,24 @@ export class MediaService {
   remove(id: string): Observable<{ id: string }> {
     return this.api.delete<{ id: string }>(`admin/media/${id}`);
   }
+
+  /** GET /api/admin/media/folders — list created folders. */
+  listFolders(): Observable<{ _id: string; name: string }[]> {
+    return this.api.get<{ _id: string; name: string }[]>('admin/media/folders');
+  }
+
+  /** POST /api/admin/media/folders — create a folder with a custom name (admin only). */
+  createFolder(name: string): Observable<{ _id: string; name: string; folder?: string }> {
+    return this.api.post<{ _id: string; name: string; folder?: string }>('admin/media/folders', { name });
+  }
+
+  /** PUT /api/admin/media/folders/:id — rename a folder (admin only). */
+  updateFolder(id: string, name: string): Observable<{ _id: string; name: string; folder?: string }> {
+    return this.api.put<{ _id: string; name: string; folder?: string }>(`admin/media/folders/${id}`, { name });
+  }
+
+  /** DELETE /api/admin/media/folders/:id */
+  removeFolder(id: string): Observable<{ id: string }> {
+    return this.api.delete<{ id: string }>(`admin/media/folders/${id}`);
+  }
 }
