@@ -59,7 +59,7 @@ import {
 
           @if (categories().length) {
             <div class="filter-group">
-              <h4>دستهبندی</h4>
+              <h4>دسته بندی</h4>
               <div class="filter-list">
                 <label>
                   <input

@@ -140,7 +140,7 @@ const resolveCategory =
       !category
     )
       throw ApiError.notFound(
-        "دستهبندی محصول یافت نشد",
+        "دسته بندی محصول یافت نشد",
       );
     return category.id;
   };
@@ -1373,7 +1373,7 @@ export const create =
         !body.category
       )
         throw ApiError.badRequest(
-          "انتخاب دستهبندی الزامی است",
+          "انتخاب دسته بندی الزامی است",
         );
 
       const product =

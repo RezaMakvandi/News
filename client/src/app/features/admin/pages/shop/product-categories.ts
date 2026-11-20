@@ -27,7 +27,7 @@ import type { ProductCategory } from '../../../../core/models/product.model';
     <div class="admin-page-head">
       <div>
         <h1>دسته بندی محصولات</h1>
-        <p class="text-sm text-muted">دستهبندی کاتالوگ فروشگاه.</p>
+        <p class="text-sm text-muted">دسته بندی کاتالوگ فروشگاه.</p>
       </div>
       <button type="button" class="btn btn-primary" (click)="openEditor()">
         <app-icon name="plus-circle" [size]="18" /> دسته جدید
@@ -40,7 +40,7 @@ import type { ProductCategory } from '../../../../core/models/product.model';
       <app-empty-state
         icon="folder"
         title="دستهای یافت نشد"
-        description="اولین دستهبندی محصول را ایجاد کنید."
+        description="اولین دسته بندی محصول را ایجاد کنید."
         actionLabel="ایجاد دسته"
         actionIcon="plus-circle"
         (action)="openEditor()"
@@ -51,7 +51,7 @@ import type { ProductCategory } from '../../../../core/models/product.model';
           <table class="table">
             <thead>
               <tr>
-                <th>دستهبندی</th>
+                <th>دسته بندی</th>
                 <th>نامک</th>
                 <th>تعداد محصول</th>
                 <th>وضعیت</th>
@@ -113,7 +113,7 @@ import type { ProductCategory } from '../../../../core/models/product.model';
     @if (editorOpen()) {
       <app-modal
         [open]="true"
-        [title]="editing()?._id ? 'ویرایش دستهبندی' : 'دستهبندی جدید'"
+        [title]="editing()?._id ? 'ویرایش دسته بندی' : 'دسته بندی جدید'"
         (closed)="editorOpen.set(false)"
       >
         <div class="stack-lg">
@@ -178,8 +178,8 @@ import type { ProductCategory } from '../../../../core/models/product.model';
 
     <app-confirm-dialog
       [open]="confirmOpen()"
-      title="حذف دستهبندی"
-      [message]="'دستهبندی «' + (deleteTarget()?.name ?? '') + '» حذف میشود.'"
+      title="حذف دسته بندی"
+      [message]="'دسته بندی «' + (deleteTarget()?.name ?? '') + '» حذف میشود.'"
       [busy]="deleting()"
       (confirm)="performDelete()"
       (cancel)="confirmOpen.set(false)"
@@ -211,7 +211,7 @@ export class AdminProductCategoriesPage {
   };
 
   constructor() {
-    this.seo.set({ title: 'دستهبندی محصولات | پنل مدیریت' });
+    this.seo.set({ title: 'دسته بندی محصولات | پنل مدیریت' });
     this.load();
   }
 
@@ -231,7 +231,7 @@ export class AdminProductCategoriesPage {
 
   protected save(): void {
     if (!this.form.name.trim()) {
-      this.toast.warning('نام دستهبندی الزامی است');
+      this.toast.warning('نام دسته بندی الزامی است');
       return;
     }
     this.saving.set(true);
@@ -244,7 +244,7 @@ export class AdminProductCategoriesPage {
       next: () => {
         this.saving.set(false);
         this.editorOpen.set(false);
-        this.toast.success(editing ? 'دستهبندی بهروزرسانی شد' : 'دستهبندی ایجاد شد');
+        this.toast.success(editing ? 'دسته بندی بهروزرسانی شد' : 'دسته بندی ایجاد شد');
         this.load();
       },
       error: (error: Error) => {
@@ -267,7 +267,7 @@ export class AdminProductCategoriesPage {
       next: () => {
         this.deleting.set(false);
         this.confirmOpen.set(false);
-        this.toast.success('دستهبندی حذف شد');
+        this.toast.success('دسته بندی حذف شد');
         this.load();
       },
       error: (error: Error) => {

@@ -69,7 +69,7 @@ export function brandName(value: unknown): string {
 }
 
 export function productCategoryName(value: unknown): string {
-  return asProductCategory(value)?.name ?? 'دستهبندی نشده';
+  return asProductCategory(value)?.name ?? 'دسته بندی نشده';
 }
 
 /** Star rating as an array of 'full' | 'half' | 'empty' buckets for rendering. */

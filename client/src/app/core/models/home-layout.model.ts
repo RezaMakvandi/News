@@ -156,7 +156,7 @@ export const HOME_SECTION_DEFS: HomeSectionDef[] = [
     type: 'category_articles',
     label: 'اخبار یک دسته',
     icon: 'folder',
-    description: 'آخرین اخبار یک دستهبندی مشخص.',
+    description: 'آخرین اخبار یک دسته بندی مشخص.',
     defaults: {
       title: 'اخبار دسته',
       limit: 4,
@@ -205,11 +205,11 @@ export const HOME_SECTION_DEFS: HomeSectionDef[] = [
   },
   {
     type: 'product_categories',
-    label: 'دستهبندی محصولات',
+    label: 'دسته بندی محصولات',
     icon: 'grid',
-    description: 'کاشیهای دستهبندی کالاهای فروشگاه.',
+    description: 'کاشیهای دسته بندی کالاهای فروشگاه.',
     defaults: {
-      title: 'دستهبندی محصولات',
+      title: 'دسته بندی محصولات',
       limit: 8,
       columns: 4,
       showCta: true,

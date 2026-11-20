@@ -29,7 +29,7 @@ const productCategorySchema =
         required:
           [
             true,
-            "نام دستهبندی الزامی است",
+            "نام دسته بندی الزامی است",
           ],
         trim: true,
         maxlength: 100,

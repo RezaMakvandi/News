@@ -161,7 +161,7 @@ export const getBySlug =
         !category
       )
         throw ApiError.notFound(
-          "دستهبندی یافت نشد",
+          "دسته بندی یافت نشد",
         );
       const productsCount =
         await Product.countDocuments(
@@ -231,7 +231,7 @@ export const create =
         {
           status: 201,
           message:
-            "دستهبندی ایجاد شد",
+            "دسته بندی ایجاد شد",
         },
       );
     },
@@ -248,7 +248,7 @@ export const update =
         req
           .params
           .id,
-        "شناسه دستهبندی",
+        "شناسه دسته بندی",
       );
       const category =
         await ProductCategory.findById(
@@ -260,7 +260,7 @@ export const update =
         !category
       )
         throw ApiError.notFound(
-          "دستهبندی یافت نشد",
+          "دسته بندی یافت نشد",
         );
 
       const body =
@@ -276,7 +276,7 @@ export const update =
           category.id
       ) {
         throw ApiError.badRequest(
-          "دستهبندی نمیتواند والد خودش باشد",
+          "دسته بندی نمیتواند والد خودش باشد",
         );
       }
       if (
@@ -356,7 +356,7 @@ export const update =
         category,
         {
           message:
-            "دستهبندی بهروزرسانی شد",
+            "دسته بندی بهروزرسانی شد",
         },
       );
     },
@@ -373,7 +373,7 @@ export const remove =
         req
           .params
           .id,
-        "شناسه دستهبندی",
+        "شناسه دسته بندی",
       );
       const productsCount =
         await Product.countDocuments(
@@ -389,7 +389,7 @@ export const remove =
         0
       ) {
         throw ApiError.badRequest(
-          `این دستهبندی ${productsCount} محصول دارد. ابتدا محصولات آن را جابجا کنید.`,
+          `این دسته بندی ${productsCount} محصول دارد. ابتدا محصولات آن را جابجا کنید.`,
         );
       }
       const category =
@@ -402,7 +402,7 @@ export const remove =
         !category
       )
         throw ApiError.notFound(
-          "دستهبندی یافت نشد",
+          "دسته بندی یافت نشد",
         );
       return sendSuccess(
         res,
@@ -413,7 +413,7 @@ export const remove =
         },
         {
           message:
-            "دستهبندی حذف شد",
+            "دسته بندی حذف شد",
         },
       );
     },

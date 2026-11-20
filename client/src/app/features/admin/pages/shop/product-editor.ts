@@ -265,7 +265,7 @@ import { finalPrice } from '../../../../core/utils/shop';
             <div class="card-head"><span class="card-title">سازماندهی</span></div>
             <div class="card-body">
               <div class="field">
-                <label class="label">دستهبندی <span class="req">*</span></label>
+                <label class="label">دسته بندی <span class="req">*</span></label>
                 <select class="select" [(ngModel)]="form.category" name="category">
                   <option value="">انتخاب کنید</option>
                   @for (category of categories(); track category._id) {
@@ -615,7 +615,7 @@ export class ProductEditorPage {
       return;
     }
     if (!this.form.category) {
-      this.toast.warning('دستهبندی را انتخاب کنید');
+      this.toast.warning('دسته بندی را انتخاب کنید');
       return;
     }
     if (!this.form.price || this.form.price <= 0) {

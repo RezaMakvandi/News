@@ -205,7 +205,7 @@ import type { ProductCategory } from '../../../../core/models/product.model';
 
                         @if (section.type === 'category_articles') {
                           <div class="field">
-                            <label class="label">دستهبندی اخبار</label>
+                            <label class="label">دسته بندی اخبار</label>
                             <select
                               class="input"
                               [ngModel]="section.categorySlug"
@@ -253,7 +253,7 @@ import type { ProductCategory } from '../../../../core/models/product.model';
                               </select>
                             </div>
                             <div class="field">
-                              <label class="label">دستهبندی محصول (اختیاری)</label>
+                              <label class="label">دسته بندی محصول (اختیاری)</label>
                               <select
                                 class="input"
                                 [ngModel]="section.productCategory"
