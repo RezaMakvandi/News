@@ -51,7 +51,7 @@ import { ToastService } from '../../../../core/services/toast.service';
               </a>
               <a class="profile-nav-item" routerLink="/profile" [queryParams]="{ tab: 'wishlist' }">
                 <app-icon name="heart" [size]="16" />
-                علاقهمندیها
+                علاقه مندیها
               </a>
               <a class="profile-nav-item" routerLink="/profile" [queryParams]="{ tab: 'compare' }">
                 <app-icon name="scale" [size]="16" />

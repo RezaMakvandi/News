@@ -181,7 +181,7 @@ import {
                 type="button"
                 class="btn btn-outline btn-lg"
                 (click)="toggleWishlist()"
-                [attr.aria-label]="'علاقهمندی'"
+                [attr.aria-label]="'علاقه مندی'"
               >
                 <app-icon name="heart" [size]="18" />
               </button>
@@ -599,12 +599,12 @@ export class ProductDetailPage {
 
   protected toggleWishlistById(productId: string): void {
     if (!this.auth.isLoggedIn()) {
-      this.toast.warning('برای افزودن به علاقهمندیها وارد حساب خود شوید');
+      this.toast.warning('برای افزودن به علاقه مندیها وارد حساب خود شوید');
       return;
     }
     this.cart.toggleWishlist(productId).subscribe({
       next: (result) =>
-        this.toast.success(result.wishlisted ? 'به علاقهمندیها اضافه شد' : 'از علاقهمندیها حذف شد'),
+        this.toast.success(result.wishlisted ? 'به علاقه مندیها اضافه شد' : 'از علاقه مندیها حذف شد'),
       error: (error: Error) => this.toast.error(error.message),
     });
   }

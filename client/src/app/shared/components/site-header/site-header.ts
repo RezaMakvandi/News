@@ -185,7 +185,7 @@ import { USER_ROLE_LABELS } from '../../../core/models/user.model';
                       (click)="closeProfile()"
                     >
                       <app-icon name="heart" [size]="16" />
-                      علاقهمندیها
+                      علاقه مندیها
                     </a>
                     <a
                       class="dropdown-item"
@@ -300,7 +300,7 @@ import { USER_ROLE_LABELS } from '../../../core/models/user.model';
             @if (shopEnabled()) {
               <a routerLink="/shop" routerLinkActive="is-active" (click)="closeMobile()">فروشگاه</a>
               <a routerLink="/shop/wishlist" routerLinkActive="is-active" (click)="closeMobile()"
-                >علاقهمندیها</a
+                >علاقه مندیها</a
               >
               <a routerLink="/shop/orders" routerLinkActive="is-active" (click)="closeMobile()"
                 >سفارشهای من</a

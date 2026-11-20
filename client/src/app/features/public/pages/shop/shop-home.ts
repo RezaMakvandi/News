@@ -177,7 +177,7 @@ export class ShopHomePage {
   protected toggleWishlist(productId: string): void {
     this.cart.toggleWishlist(productId).subscribe({
       next: (result) =>
-        this.toast.success(result.wishlisted ? 'به علاقهمندیها اضافه شد' : 'از علاقهمندیها حذف شد'),
+        this.toast.success(result.wishlisted ? 'به علاقه مندیها اضافه شد' : 'از علاقه مندیها حذف شد'),
       error: (error: Error) => this.toast.error(error.message),
     });
   }

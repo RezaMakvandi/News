@@ -17,9 +17,9 @@ import type { ProductCard } from '../../../../core/models/product.model';
     <div class="container page">
       <div class="admin-page-head" style="margin-bottom:var(--space-5)">
         <div>
-          <h1><app-icon name="heart" [size]="22" /> علاقهمندیها</h1>
+          <h1><app-icon name="heart" [size]="22" /> علاقه مندیها</h1>
           <p class="text-sm text-muted">
-            {{ products().length | faNumber }} کالا در لیست علاقهمندی شما.
+            {{ products().length | faNumber }} کالا در لیست علاقه مندی شما.
           </p>
         </div>
       </div>
@@ -39,7 +39,7 @@ import type { ProductCard } from '../../../../core/models/product.model';
       } @else {
         <div class="shop-empty">
           <div class="shop-empty-icon"><app-icon name="heart" [size]="40" /></div>
-          <h2>لیست علاقهمندیها خالی است</h2>
+          <h2>لیست علاقه مندیها خالی است</h2>
           <p class="text-muted">محصولات مورد علاقه خود را با زدن آیکون قلب ذخیره کنید.</p>
           <a class="btn btn-primary" routerLink="/shop/products">مشاهده محصولات</a>
         </div>
@@ -56,7 +56,7 @@ export class WishlistPage {
   protected readonly loading = signal(true);
 
   constructor() {
-    this.seo.set({ title: 'علاقهمندیها' });
+    this.seo.set({ title: 'علاقه مندیها' });
     this.load();
   }
 
@@ -64,7 +64,7 @@ export class WishlistPage {
     this.cart.toggleWishlist(productId).subscribe({
       next: () => {
         this.products.update((list) => list.filter((item) => item._id !== productId));
-        this.toast.info('از علاقهمندیها حذف شد');
+        this.toast.info('از علاقه مندیها حذف شد');
       },
       error: (error: Error) => this.toast.error(error.message),
     });

@@ -41,7 +41,7 @@ type ProductLike = ProductCard;
         class="wishlist-btn"
         [class.is-on]="wishlisted()"
         (click)="onWishlist($event)"
-        [attr.aria-label]="wishlisted() ? 'حذف از علاقهمندیها' : 'افزودن به علاقهمندیها'"
+        [attr.aria-label]="wishlisted() ? 'حذف از علاقه مندیها' : 'افزودن به علاقه مندیها'"
       >
         <app-icon [name]="wishlisted() ? 'heart-filled' : 'heart'" [size]="17" />
       </button>
@@ -117,7 +117,7 @@ export class ProductCardComponent {
     event.preventDefault();
     event.stopPropagation();
     if (!this.auth.isLoggedIn()) {
-      this.toast.warning('برای افزودن به علاقهمندیها وارد حساب خود شوید');
+      this.toast.warning('برای افزودن به علاقه مندیها وارد حساب خود شوید');
       return;
     }
     this.wishlistToggled.emit(this.product()._id);

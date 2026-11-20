@@ -69,7 +69,7 @@ import { ComparePage } from '../shop/compare';
                 [class.is-active]="activeTab() === 'wishlist'"
               >
                 <app-icon name="heart" [size]="16" />
-                علاقهمندیها
+                علاقه مندیها
               </a>
               <a
                 class="profile-nav-item"
@@ -134,16 +134,23 @@ import { ComparePage } from '../shop/compare';
             </div>
 
             <div class="field">
-              <label class="label" for="profile-avatar">نشانی تصویر پروفایل</label>
-              <input
-                id="profile-avatar"
-                class="input"
-                type="url"
-                dir="ltr"
-                name="avatar"
-                placeholder="https://…"
-                [(ngModel)]="avatar"
-              />
+              <label class="label" for="profile-avatar">تصویر پروفایل</label>
+              <div class="avatar-picker">
+                @if (avatar()) {
+                  <img class="profile-avatar-preview" [src]="avatar()" alt="پیش‌نمایش تصویر پروفایل" />
+                } @else if (auth.currentUser()?.avatar) {
+                  <img class="profile-avatar-preview" [src]="auth.currentUser()!.avatar" alt="تصویر پروفایل" />
+                } @else {
+                  <span class="profile-avatar profile-avatar-fallback">{{ userInitial() }}</span>
+                }
+                <input
+                  id="profile-avatar"
+                  type="file"
+                  accept="image/*"
+                  (change)="onAvatarSelected($event)"
+                />
+              </div>
+              <span class="hint">تصویر پروفایل را از تصاویر روی دستگاه خود انتخاب کنید.</span>
             </div>
 
             <div class="field">
@@ -217,6 +224,20 @@ import { ComparePage } from '../shop/compare';
       color: var(--accent);
       font-size: 1.2rem;
       font-weight: 800;
+    }
+
+    .avatar-picker {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .profile-avatar-preview {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-full);
+      object-fit: cover;
+      flex-shrink: 0;
     }
 
     .profile-name {
@@ -300,7 +321,7 @@ export class ProfilePage {
   protected readonly activeTab = signal<'account' | 'orders' | 'wishlist' | 'compare'>('account');
 
   protected name = '';
-  protected avatar = '';
+  protected readonly avatar = signal('');
   protected bio = '';
   protected readonly saving = signal(false);
   protected readonly error = signal('');
@@ -347,7 +368,7 @@ export class ProfilePage {
     this.auth
       .updateProfile({
         name: this.name.trim(),
-        avatar: this.avatar.trim(),
+        avatar: this.avatar().trim(),
         bio: this.bio.trim(),
       })
       .subscribe({
@@ -365,9 +386,29 @@ export class ProfilePage {
   protected reset(): void {
     const user = this.auth.currentUser();
     this.name = user?.name ?? '';
-    this.avatar = user?.avatar ?? '';
+    this.avatar.set(user?.avatar ?? '');
     this.bio = user?.bio ?? '';
     this.fieldErrors.set({});
     this.error.set('');
+  }
+
+  protected onAvatarSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      this.toast.error('فقط فایل تصویری قابل انتخاب است.');
+      return;
+    }
+    if (file.size > 1024 * 1024) {
+      this.toast.error('حجم تصویر نباید بیش از ۱ مگابایت باشد.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => this.avatar.set(String(reader.result ?? ''));
+    reader.readAsDataURL(file);
   }
 }
